@@ -1,0 +1,67 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  NODE_VERSION: "14.19.1"
+  APP_NAME: "SSStudy"
+  DEPLOY_PATH: "/home/dnm/Project/SSStudy_deploy_uat_test"
+  DEPLOY_PORT: "5508"
+  DEPLOY_HOST: "192.168.1.46"
+  DEPLOY_USER: "dnm"
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "sit"'
+
+build:
+  stage: build
+  image: node:${NODE_VERSION}
+  script:
+    - echo "Building application..."
+    - if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then npm ci --production --no-audit --no-fund; else npm install --production --no-audit --no-fund; fi
+    - mkdir -p build_temp
+    - cp -r app/ config/ db/ scripts/ build_temp/ 2>/dev/null || true
+    - cp package*.json app.js ecosystem.config.js jsconfig.json Dockerfile build_temp/ 2>/dev/null || true
+    - tar -czf ${APP_NAME}-${CI_COMMIT_SHA}.tar.gz -C build_temp .
+    - rm -rf build_temp
+  artifacts:
+    paths:
+      - ${APP_NAME}-${CI_COMMIT_SHA}.tar.gz
+    expire_in: 1 hour
+  only:
+    - sit
+
+deploy:
+  stage: deploy
+  image: node:14
+  before_script:
+    - apt-get update && apt-get install -y openssh-client
+    - 'printf "%b" "$SSH_PRIVATE_KEY" > /tmp/ssh_key'
+    - chmod 600 /tmp/ssh_key
+    - eval "$(ssh-agent -s)"
+    - ssh-add /tmp/ssh_key
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -p ${DEPLOY_PORT} -H ${DEPLOY_HOST} >> ~/.ssh/known_hosts || true
+  script:
+    - echo "Deploying to SIT..."
+    - scp -P ${DEPLOY_PORT} ${APP_NAME}-${CI_COMMIT_SHA}.tar.gz ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/
+    - |
+      ssh -p ${DEPLOY_PORT} ${DEPLOY_USER}@${DEPLOY_HOST} "
+        set -e
+        if [ -d ${DEPLOY_PATH} ]; then
+          rm -rf ${DEPLOY_PATH}.backup || true
+          mv ${DEPLOY_PATH} ${DEPLOY_PATH}.backup || true
+        fi
+        mkdir -p ${DEPLOY_PATH}
+        tar -xzf /tmp/${APP_NAME}-${CI_COMMIT_SHA}.tar.gz -C ${DEPLOY_PATH}
+        cd ${DEPLOY_PATH}
+        if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then npm ci --production --silent; else npm install --production --silent; fi
+        NODE_ENV=sit pm2 start ecosystem.config.js --env sit || NODE_ENV=sit pm2 start ecosystem.config.js --env sit
+        pm2 save
+        rm -f /tmp/${APP_NAME}-${CI_COMMIT_SHA}.tar.gz
+      "
+  dependencies:
+    - build
+  only:
+    - sit

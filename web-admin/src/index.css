@@ -1,0 +1,76 @@
+body {
+    background: #f9f9f9 !important;
+}
+
+/**
+Testing
+**/
+.listing-footer {}
+
+.showing-text {
+    line-height: 30px;
+}
+
+:root {
+  --keyboard-zindex: 1063; /* Cao hơn popup */
+}
+
+/* Styles cho cluster questions và child questions */
+.cluster-question {
+  background-color: #f8f9fa !important;
+  border-left: 4px solid #007bff !important;
+}
+
+.child-question-row {
+  background-color: #fafafa !important;
+  border-left: 3px solid #007bff !important;
+}
+
+.placeholder-row {
+  background-color: #fff3cd !important;
+  border-left: 3px solid #ffc107 !important;
+}
+
+.placeholder-row:hover {
+  background-color: #ffeaa7 !important;
+}
+
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+.fa-chevron-down, .fa-chevron-right {
+  transition: transform 0.2s ease;
+}
+
+.fa-chevron-down:hover, .fa-chevron-right:hover {
+  transform: scale(1.1);
+}
+
+.badge-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+/* Styles cho modal chọn loại câu hỏi */
+#select-question-type-modal .question-type-btn {
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #007bff;
+  transition: all 0.3s;
+}
+
+#select-question-type-modal .question-type-btn:hover {
+  background-color: #007bff;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+}
+
+#select-question-type-modal .question-type-btn i {
+  font-size: 24px;
+  margin-bottom: 8px;
+}

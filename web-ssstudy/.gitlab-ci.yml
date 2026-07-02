@@ -1,0 +1,181 @@
+stages:
+  - install
+  - build
+  - deploy
+
+variables:
+  NODE_VERSION: "18"
+  NPM_CACHE_DIR: "$CI_PROJECT_DIR/.npm"
+  SSH_KEY: $SSH_PRIVATE_KEY
+  SSH_USER: $SSH_USER
+  SSH_HOST: $SSH_HOST
+  SERVER_PATH: "/home/$SSH_USER/web-ssstudy"
+  PM2_APP_NAME: "ssstudy-web"
+  NODE_OPTIONS: "--max-old-space-size=4096"
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - $NPM_CACHE_DIR
+    - node_modules/
+    - .next/cache/
+
+# Cài đặt dependencies
+install:
+  stage: install
+  image: node:${NODE_VERSION}
+  script:
+    - echo "Installing dependencies..."
+    - npm ci --legacy-peer-deps
+  artifacts:
+    paths:
+      - node_modules/
+
+# Build môi trường development
+build:dev:
+  stage: build
+  image: node:${NODE_VERSION}
+  script:
+    - echo "Building for development environment..."
+    - cp .env.development .env
+    - export NODE_OPTIONS="--max-old-space-size=4096"
+    - npm run build || (echo "Build failed with error:" && cat .next/error.log && exit 1)
+  artifacts:
+    paths:
+      - .next/
+      - public/
+      - package.json
+      - next.config.mjs
+      - .env
+      - node_modules/
+  only:
+    - develop
+  dependencies:
+    - install
+
+# Build môi trường staging
+build:staging:
+  stage: build
+  image: node:${NODE_VERSION}
+  script:
+    - echo "Building for staging environment..."
+    - cp .env.staging .env
+    - export NODE_OPTIONS="--max-old-space-size=4096"
+    - npm run build
+  artifacts:
+    paths:
+      - .next/
+      - public/
+      - package.json
+      - next.config.mjs
+      - .env
+      - node_modules/
+  only:
+    - staging
+  dependencies:
+    - install
+
+# Build môi trường production
+build:production:
+  stage: build
+  image: node:${NODE_VERSION}
+  script:
+    - echo "Building for production environment..."
+    - cp .env.production .env
+    - export NODE_OPTIONS="--max-old-space-size=4096"
+    - npm run build
+  artifacts:
+    paths:
+      - .next/
+      - public/
+      - package.json
+      - next.config.mjs
+      - .env
+      - node_modules/
+  only:
+    - main
+    - master
+    - tags
+  dependencies:
+    - install
+
+# Deploy lên EC2 cho development
+deploy:dev:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client rsync
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+  script:
+    - echo "Deploying to EC2 development environment..."
+    - ssh $SSH_USER@$SSH_HOST "mkdir -p $SERVER_PATH-dev"
+    - rsync -avz --delete .next/ $SSH_USER@$SSH_HOST:$SERVER_PATH-dev/.next/
+    - rsync -avz --delete public/ $SSH_USER@$SSH_HOST:$SERVER_PATH-dev/public/
+    - rsync -avz node_modules/ $SSH_USER@$SSH_HOST:$SERVER_PATH-dev/node_modules/
+    - rsync -avz package.json next.config.mjs .env $SSH_USER@$SSH_HOST:$SERVER_PATH-dev/
+    - ssh $SSH_USER@$SSH_HOST "cd $SERVER_PATH-dev && export NODE_ENV=production && pm2 restart $PM2_APP_NAME-dev || NODE_ENV=production pm2 start npm --name $PM2_APP_NAME-dev -- start"
+  only:
+    - develop
+  dependencies:
+    - build:dev
+  environment:
+    name: development
+    url: http://$SSH_HOST:3000
+
+# Deploy lên EC2 cho staging
+deploy:staging:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client rsync
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+  script:
+    - echo "Deploying to EC2 staging environment..."
+    - ssh $SSH_USER@$SSH_HOST "mkdir -p $SERVER_PATH-staging"
+    - rsync -avz --delete .next/ $SSH_USER@$SSH_HOST:$SERVER_PATH-staging/.next/
+    - rsync -avz --delete public/ $SSH_USER@$SSH_HOST:$SERVER_PATH-staging/public/
+    - rsync -avz node_modules/ $SSH_USER@$SSH_HOST:$SERVER_PATH-staging/node_modules/
+    - rsync -avz package.json next.config.mjs .env $SSH_USER@$SSH_HOST:$SERVER_PATH-staging/
+    - ssh $SSH_USER@$SSH_HOST "cd $SERVER_PATH-staging && export NODE_ENV=production && pm2 restart $PM2_APP_NAME-staging || NODE_ENV=production pm2 start npm --name $PM2_APP_NAME-staging -- start -- -p 3001"
+  only:
+    - staging
+  dependencies:
+    - build:staging
+  environment:
+    name: staging
+    url: http://$SSH_HOST:3001
+
+# Deploy lên EC2 cho production
+deploy:production:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client rsync
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+  script:
+    - echo "Deploying to EC2 production environment..."
+    - ssh $SSH_USER@$SSH_HOST "mkdir -p $SERVER_PATH"
+    - rsync -avz --delete .next/ $SSH_USER@$SSH_HOST:$SERVER_PATH/.next/
+    - rsync -avz --delete public/ $SSH_USER@$SSH_HOST:$SERVER_PATH/public/
+    - rsync -avz node_modules/ $SSH_USER@$SSH_HOST:$SERVER_PATH/node_modules/
+    - rsync -avz package.json next.config.mjs .env $SSH_USER@$SSH_HOST:$SERVER_PATH/
+    - ssh $SSH_USER@$SSH_HOST "cd $SERVER_PATH && export NODE_ENV=production && pm2 restart $PM2_APP_NAME || NODE_ENV=production pm2 start npm --name $PM2_APP_NAME -- start -- -p 3002"
+  only:
+    - main
+    - master
+    - tags
+  dependencies:
+    - build:production
+  environment:
+    name: production
+    url: http://$SSH_HOST:3002
+  when: manual  # Yêu cầu phê duyệt thủ công trước khi deploy lên production 

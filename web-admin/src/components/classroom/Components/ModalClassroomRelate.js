@@ -1,0 +1,632 @@
+import React, { Component } from "react";
+import { notification, Select } from "antd";
+import {
+    listClassroom
+} from "../../../redux/classroom/action";
+import {
+    bookUpdateRelate, showBook
+} from "../../../redux/book/action";
+import { listSubject } from "../../../redux/subject/action";
+import { Link, withRouter } from "react-router-dom";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import { isUndefined } from "util";
+
+import BaseHelpers from "../../../helpers/BaseHelpers";
+import { isArray, map } from "lodash";
+
+const { Option } = Select;
+
+class Row extends Component {
+    constructor(props) {
+        super();
+        this.state = {
+            check: false,
+        };
+    }
+
+    UNSAFE_componentWillReceiveProps(nextProps) {
+        if (this.props.check !== nextProps.check) {
+            this.setState({
+                check: nextProps.check,
+            });
+        }
+    }
+
+    handleDeleteBook = (id) => {
+        this.props.deleteClassroom(id);
+    }
+
+    render() {
+
+        return (
+            <tr className='v-middle' data-id={17}>
+                <td>
+                    <span className='item-amount d-none d-sm-block text-sm'>
+                        {
+                            this.props.obj.code ? this.props.obj.code : ''
+                        }
+                    </span>
+                </td>
+                <td className='flex'>
+                    <Link
+                        className='item-author text-color'
+                        to={"/student/" + this.props.obj._id + "/edit"}
+                    >
+                        {this.props.obj.name ? this.props.obj.name : ''}
+                    </Link>
+                </td>
+                <td>
+                    <span className='item-amount d-none d-sm-block text-sm'>
+                        {this.props.obj.price ? BaseHelpers.currencyFormat(this.props.obj.price) : 0}
+                    </span>
+                </td>
+                <td>
+                    <span>
+                        {this.props.obj.updated_at ? BaseHelpers.formatDateToString(this.props.obj.updated_at) : ''}
+                    </span>
+                </td>
+                <td>
+                    <button onClick={() => this.handleDeleteBook(this.props.obj._id)} className='btn btn-icon'>
+                        <svg
+                            xmlns='http://www.w3.org/2000/svg'
+                            width={16}
+                            height={16}
+                            viewBox='0 0 24 24'
+                            fill='none'
+                            stroke='currentColor'
+                            strokeWidth={2}
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            className='feather feather-trash text-muted'
+                        >
+                            <polyline points='3 6 5 6 21 6' />
+                            <path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2' />
+                        </svg>
+                    </button>
+                </td>
+            </tr>
+        );
+    }
+}
+
+class ModalClassroomRelate extends Component {
+    constructor(props) {
+        if (props.classroom)
+            console.log(props)
+        super();
+        this.state = {
+            data: [],
+            ids: [],
+            selectedClassroom: '',
+            classroomRelates: [],
+            keyword: null,
+            level: null,
+            subject_id: null
+        };
+    }
+
+
+    fetchRows() {
+        if (this.state.classroomRelates instanceof Array) {
+            return this.state.classroomRelates.map((object, i) => {
+                return (
+                    <Row
+                        obj={object}
+                        key={object._id}
+                        index={i}
+                        deleteClassroom={this.handleDeleteClassroom}
+                        getData={this.getData}
+                        addMember={this.props.addMember}
+                        classroom_id={this.props.classroom_id}
+                        listMember={this.props.listMember}
+                    />
+                );
+            });
+        }
+    }
+
+    handleDeleteClassroom = async (id) => {
+        let { classroom_relates, _id } = this.props.book;
+
+        if (classroom_relates && isArray(classroom_relates)) {
+            const new_arr = classroom_relates.filter(item => item != id);
+
+
+            const params = {
+                classroom_relates: new_arr,
+                book_id: _id
+            };
+
+            await this.props.bookUpdateRelate(params);
+            await this.props.showBook(_id);
+        }
+    }
+
+    onChange = async (e) => {
+        let name  = e.target.name;
+        let value = e.target.value;
+        await this.setState({
+            [name]: value,
+        });
+
+        this.getData(1);
+    };
+
+    getData = async (pageNumber = 1) => {
+        const data = {
+            page: pageNumber,
+            limit: this.state.limit,
+        };
+        if (this.state.keyword != null) {
+            data["keyword"] = this.state.keyword;
+        }
+        if (this.state.level != null) {
+            data["level"] = this.state.level;
+        }
+        if (this.state.subject_id != null) {
+            data["subject_id"] = this.state.subject_id;
+        }
+        await this.props.listClassroom(data);
+
+    };
+
+    async componentDidMount() {
+        if (this.props.limit) {
+            await this.setState({
+                limit: this.props.limit,
+                ids: this.props.ids,
+            });
+        }
+        this.getData(1);
+    }
+
+    onSubmit = (e) => {
+        // e.preventDefault();
+        // this.props.listBook(this.getData());
+    };
+
+    fetchOptions() {
+        if (this.props.classrooms instanceof Array) {
+            return this.props.classrooms.map((obj, i) => {
+                return <Option key={obj._id.toString()}>{obj.name}</Option>;
+            });
+        }
+    }
+
+    handleChangePage = async (pageNumber) => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        await this.props.listBook(this.getData(pageNumber));
+    };
+
+    handleDelete = async () => {
+        const data = {
+            ids: this.props.ids,
+        };
+        if (data.ids.length !== 0) {
+            await this.props.listBook(this.getData());
+        } else {
+            notification.warning({
+                message: "Chưa chọn mục nào !",
+                placement: "topRight",
+                top: 50,
+                duration: 3,
+            });
+        }
+    };
+
+    handleChange = async (e) => {
+        var name = e.target.name;
+        var value = e.target.value;
+        await this.setState({
+            [name]: value,
+        });
+        await this.props.listBook(this.getData());
+    };
+
+    UNSAFE_componentWillReceiveProps(nextProps) {
+        if (this.props.checkAll !== nextProps.check) {
+            this.setState({
+                checkAll: nextProps.check,
+            });
+        }
+        if (this.props.classroomRelates !== nextProps.classroomRelates) {
+            this.setState({
+                classroomRelates: nextProps.classroomRelates,
+                selectedClassroom: ''
+            })
+        }
+        if (this.props.selectedClassroomRelateIDs !== nextProps.selectedClassroomRelateIDs) {
+            if (this.props.classrooms) {
+                let data = [];
+                map(nextProps.selectedClassroomRelateIDs, (value, index) => {
+                    let findValue = this.props.classrooms.filter(item => item._id == value);
+                    if (findValue && findValue.length > 0) {
+                        let dataItem = {
+                            avatar: findValue[0].avatar ? findValue[0].avatar : "",
+                            name: findValue[0].name ? findValue[0].name : "",
+                            price: findValue[0].price ? findValue[0].price : 0,
+                            id: findValue[0]._id ? findValue[0]._id : null
+                        };
+                        data.push(dataItem);
+                    }
+                })
+                this.props.handleAddSelectedClassroomRelate(data);
+
+            }
+        }
+    }
+
+    handleCheckAll = (e) => {
+        if (e.target.checked) {
+            this.props.checkAll(true);
+            this.setState({
+                checkAll: e.target.checked,
+            });
+        } else {
+            this.props.checkAll(false);
+            this.setState({
+                checkAll: e.target.checked,
+            });
+        }
+    };
+
+    handleSubmit = async () => {
+        let { classroom_relates, _id } = this.props.book;
+        const { selectedClassroom } = this.state;
+
+        if (selectedClassroom && selectedClassroom != '') {
+            if (classroom_relates && !classroom_relates.includes(selectedClassroom)) {
+                classroom_relates.push(selectedClassroom);
+                const params = {
+                    classroom_relates: classroom_relates,
+                    book_id: _id
+                };
+
+                await this.props.bookUpdateRelate(params);
+                await this.props.showBook(_id);
+            } else {
+                notification.warning({
+                    message: "Lớp học đã được thêm !",
+                    placement: "topRight",
+                    top: 50,
+                    duration: 3,
+                    style: {
+                        zIndex: 1050,
+                    },
+                });
+            }
+        } else {
+            notification.warning({
+                message: "Vui lòng chọn lớp học !",
+                placement: "topRight",
+                top: 50,
+                duration: 3,
+                style: {
+                    zIndex: 1050,
+                },
+            });
+        }
+    };
+
+    fetchListItemClassroom() {
+        let selectedClassroom = this.props.selectedClassroom;
+        if (this.props.classrooms instanceof Array) {
+            return this.props.classrooms.map((obj, i) => {
+                let isExits = selectedClassroom.some((item => item.id === obj._id));
+                return <li className="list-item" key={obj._id.toString()}>
+                    <div className="info-classroom">
+                        <div className="image-name">
+                            <img src="/assets/img/image-default-product.svg" alt="" />
+                            <span className="ml-16">{obj.name}</span>
+                        </div>
+                        <div className="action">
+                            {
+                                !isExits
+                                    ?
+                                    <a
+                                        className="btn-add-classroom"
+                                        onClick={() => this.addClassroom(obj)}
+                                    >
+                                        <span>Thêm</span>
+                                        <img src="/assets/img/icon-add-bg-orange.svg" className="ml-12" alt="" />
+                                    </a>
+                                    :
+                                    <span className="is-exit-text">
+                                        Đã thêm
+                                        <img src="/assets/img/icon-check-done.svg" className="ml-12" alt="" />
+                                    </span>
+                            }
+                        </div>
+                    </div>
+                </li>;
+            });
+        }
+    }
+
+    addClassroom = (obj) => {
+        let data = {
+            avatar: obj.avatar ? obj.avatar : "",
+            name: obj.name ? obj.name : "",
+            price: obj.price ? obj.price : 0,
+            id: obj._id ? obj._id : null
+        };
+
+        this.props.handleAddClassroom(data);
+    }
+
+    fetchSubjectRows() {
+        if (this.props.subjects instanceof Array) {
+            return this.props.subjects.map((obj, i) => {
+                return <option key={i} value={obj._id}>{obj.name}</option>;
+            });
+        }
+    }
+
+    render() {
+        let displayFrom =
+            this.props.page === 1
+                ? 1
+                : (parseInt(this.props.page) - 1) * this.props.limit;
+        let displayTo =
+            this.props.page === 1
+                ? this.props.limit
+                : displayFrom + this.props.limit;
+        displayTo = displayTo > this.props.total ? this.props.total : displayTo;
+
+        const { bookAttached } = this.props;
+
+        return (
+            <div
+                id="classroom-relate"
+                className="modal fade modal-add-classroom"
+                data-backdrop="true"
+                style={{
+                    display: "none",
+                    minWidth: "1000px",
+                }}
+                aria-hidden="true"
+            >
+                <div
+                    className='modal-dialog animate fade-down modal-xl'
+                    data-class='fade-down'
+                    style={{
+                        width: "600px"
+                    }}
+                >
+                    <div className='modal-content'>
+                        <div className='modal-header pb-0'>
+                            <div className="toolbar p-0">
+                                <div className="flex block-filter-book">
+                                    <div className="input-group">
+                                        <div>
+                                            <select
+                                                className="custom-select"
+                                                value={this.state.level}
+                                                name="level"
+                                                onChange={this.onChange}
+                                            >
+                                                <option value="">Cấp học</option>
+                                                <option value="1">Lớp 1</option>
+                                                <option value="2">Lớp 2</option>
+                                                <option value="3">Lớp 3</option>
+                                                <option value="4">Lớp 4</option>
+                                                <option value="5">Lớp 5</option>
+                                                <option value="6">Lớp 6</option>
+                                                <option value="7">Lớp 7</option>
+                                                <option value="8">Lớp 8</option>
+                                                <option value="9">Lớp 9</option>
+                                                <option value="10">Lớp 10</option>
+                                                <option value="11">Lớp 11</option>
+                                                <option value="12">Lớp 12</option>
+                                            </select>
+                                        </div>
+
+                                        <div className='ml-16'>
+                                            <select
+                                                className="custom-select"
+                                                value={this.state.subject_id}
+                                                name="subject_id"
+                                                onChange={this.onChange}
+                                            >
+                                                <option value="">Môn học</option>
+                                                {this.fetchSubjectRows()}
+                                            </select>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            className="form-control form-control-theme keyword-custom ml-16"
+                                            placeholder="Nhập từ khoá tìm kiếm..."
+                                            onChange={this.onChange}
+                                            value={this.state.keyword}
+                                            name="keyword"
+                                        />{' '}
+                                        <span className="input-group-append">
+                                            <button
+                                                className="btn btn-white btn-sm"
+                                                type="button">
+                                                <span className="d-flex text-muted">
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        width={16}
+                                                        height={16}
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth={2}
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        className="feather feather-search">
+                                                        <circle
+                                                            cx={11}
+                                                            cy={11}
+                                                            r={8}
+                                                        />
+                                                        <line
+                                                            x1={21}
+                                                            y1={21}
+                                                            x2="16.65"
+                                                            y2="16.65"
+                                                        />
+                                                    </svg>
+                                                </span>
+                                            </button>
+                                        </span>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <button className='close' data-dismiss='modal'>
+                                <img src="/assets/img/icon-close.svg" alt="" />
+                            </button>
+                        </div>
+                        <div
+                            className='modal-body'
+                        >
+                            <div className=''>
+                                <div className='mb-5'>
+                                    <div className="list-classrooms">
+                                        <ul className="list">
+                                            {this.fetchListItemClassroom()}
+                                        </ul>
+                                    </div>
+                                    {/* <div className="row" style={{ marginBottom: "10px" }}>
+                                        <div className="col-md-7">
+                                            <div className="toolbar">
+                                                <div className="input-group">
+                                                    <Select
+                                                        showSearch
+                                                        style={{ width: "100%" }}
+                                                        placeholder="Tìm và chọn lớp"
+                                                        value={this.state.selectedClassroom}
+                                                        optionFilterProp="children"
+                                                        onChange={this.onChange}
+                                                        onSearch={this.onSearch}
+                                                        filterOption={(input, option) =>
+                                                            option.props.children
+                                                                .toLowerCase()
+                                                                .indexOf(
+                                                                    input.toLowerCase()
+                                                                ) >= 0
+                                                        }
+                                                    >
+                                                        {this.fetchOptions()}
+                                                    </Select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-5">
+                                            <button
+                                                className="btn btn-primary "
+                                                onClick={this.handleSubmit}
+                                            >
+                                                Thêm lớp
+                                            </button>
+                                        </div>
+                                    </div> */}
+
+                                    {/* <div className='row'>
+                                        <div className='col-sm-12'>
+                                            <table className='table table-theme table-row v-middle'>
+                                                <thead className='text-muted'>
+                                                    <tr>
+                                                        <th>Mã sách</th>
+                                                        <th>Tên sách</th>
+                                                        <th>Giá bán</th>
+                                                        <th>Ngày cập nhật</th>
+                                                        <th width='50px' />
+                                                    </tr>
+                                                </thead>
+                                                <tbody>{this.fetchRows()}</tbody>
+                                            </table>
+                                        </div>
+                                    </div> */}
+
+                                    <div
+                                        id='delete-student'
+                                        className='modal fade'
+                                        data-backdrop='true'
+                                        style={{ display: "none" }}
+                                        aria-hidden='true'
+                                    >
+                                        <div
+                                            className='modal-dialog animate fade-down'
+                                            data-class='fade-down'
+                                        >
+                                            <div className='modal-content'>
+                                                <div className='modal-header'>
+                                                    <div className='modal-title text-md'>
+                                                        Thông báo
+                                                    </div>
+                                                    <button
+                                                        className='close'
+                                                        data-dismiss='modal'
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                                <div className='modal-body'>
+                                                    <div className='p-4 text-center'>
+                                                        <p>
+                                                            Bạn chắc chắn muốn xóa
+                                                            bản ghi này chứ?
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className='modal-footer'>
+                                                    <button
+                                                        type='button'
+                                                        className='btn btn-light'
+                                                        data-dismiss='modal'
+                                                    >
+                                                        Đóng
+                                                    </button>
+                                                    <button
+                                                        type='button'
+                                                        onClick={this.handleDelete}
+                                                        className='btn btn-danger'
+                                                        data-dismiss='modal'
+                                                    >
+                                                        Xoá
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+}
+
+function mapStateToProps(state) {
+    return {
+        books: state.book.books,
+        limit: state.book.limit,
+        page: state.book.page,
+        total: state.book.total,
+        ids: state.book.ids,
+        check: state.book.checkAll,
+        classroom: state.classroom.classroom,
+        classrooms: state.classroom.classrooms,
+        classroomRelates: state.book.classroomRelates,
+        subjects: state.subject.subjects,
+    };
+}
+
+function mapDispatchToProps(dispatch) {
+    return bindActionCreators(
+        {
+            listClassroom, bookUpdateRelate, showBook, listSubject
+        },
+        dispatch
+    );
+}
+
+export default withRouter(
+    connect(mapStateToProps, mapDispatchToProps)(ModalClassroomRelate)
+);

@@ -1,0 +1,79 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "ssstudy-web"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Prepare Environment') {
+            steps {
+                script {
+                    echo "Preparing PRODUCTION environment..."
+                    echo "Current branch: ${env.BRANCH_NAME}"
+                    
+                    // Load .env.production from Jenkins Secret File credentials
+                    withCredentials([file(credentialsId: 'ssstudy-web-env-file', variable: 'ENV_FILE')]) {
+                        sh 'cp $ENV_FILE .env.production'
+                        echo ".env.production file loaded from Jenkins credentials"
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo "Building Docker image: ${IMAGE_NAME}:${env.BUILD_NUMBER}"
+                    sh "docker build -t ${IMAGE_NAME}:${env.BUILD_NUMBER} ."
+                    sh "docker tag ${IMAGE_NAME}:${env.BUILD_NUMBER} ${IMAGE_NAME}:latest"
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    echo "Deploying to Production..."
+                    def containerName = "ssstudy-web-container"
+                    
+                    // Stop and remove existing container if it exists
+                    sh "docker stop ${containerName} || true"
+                    sh "docker rm ${containerName} || true"
+
+                    // Run new container with resource limits
+                    sh """
+                        docker run -d \\
+                        --name ${containerName} \\
+                        -p 127.0.0.1:3002:3000 \\
+                        --cpus="4" \\
+                        --memory="4g" \\
+                        --memory-swap="4g" \\
+                        --restart unless-stopped \\
+                        ${IMAGE_NAME}:latest
+                    """
+                    
+                    echo "Deployment completed! Access at http://YOUR_SERVER_IP:3002"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline completed.'
+        }
+        success {
+            echo 'Build and deployment successful!'
+        }
+        failure {
+            echo 'Build or deployment failed.'
+        }
+    }
+}

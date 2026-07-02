@@ -1,0 +1,6 @@
+export const UPDATE_SETTING = 'UPDATE_SETTING';
+export const SETTING_WEBSITE = 'SETTING_WEBSITE';
+export const PAGE_UPDATE = 'PAGE_UPDATE';
+export const PAGE_DETAIL = 'PAGE_DETAIL';
+export const ABOUT_DETAIL = 'ABOUT_DETAIL';
+export const ABOUT_UPDATE = 'ABOUT_UPDATE';

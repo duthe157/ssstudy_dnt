@@ -1,0 +1,37 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 4548
+  },
+  "logs": {
+    "level": "debug",
+    "handleExceptions": false
+  },
+  "unauthorization": [
+    "/swagger",
+    "/favicon.ico",
+    "/docs"
+  ],
+  "redis": {
+    "host": "127.0.0.1",
+    "port": 6379,
+    "password": ""
+  },
+  "db": {
+    "uri": "mongodb://hgr0a62zxby.sn.mynetname.net:27017/ssstudy-uat",
+    "options": {
+      "auth": {
+        "user": "admin",
+        "password": "Novax20250731"
+      },
+      "autoIndex": false,
+      "reconnectTries": 50,
+      "reconnectInterval": 500,
+      "poolSize": 10,
+      "bufferMaxEntries": 0,
+      "maxPoolSize": 50
+    }
+  }
+}
+
+

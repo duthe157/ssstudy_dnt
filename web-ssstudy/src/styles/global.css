@@ -1,0 +1,839 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS cho xử lý ảnh đồng bộ kích thước */
+@layer components {
+  .exam-image,
+  .responsive-image,
+  .img-fluid {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 10px 0 !important;
+    object-fit: contain !important;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Đảm bảo tất cả ảnh trong exam có cùng styling */
+  .exam-content img,
+  .api-question-item img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 10px 0 !important;
+    object-fit: contain !important;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Container cho ảnh trong exam */
+  .exam-image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0;
+  }
+
+  /* Placeholder cho các định dạng không được hỗ trợ */
+  .unsupported-image-placeholder {
+    width: 200px !important;
+    height: 100px !important;
+    background: #f3f4f6 !important;
+    border: 2px dashed #d1d5db !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 10px 0 !important;
+    color: #6b7280 !important;
+    font-size: 12px !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .unsupported-image-placeholder:hover {
+    background: #e5e7eb !important;
+    border-color: #9ca3af !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Đặc biệt cho WMF placeholder */
+  .unsupported-image-placeholder[data-format="wmf"] {
+    background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
+    border-color: #f59e0b !important;
+    color: #92400e !important;
+  }
+
+  .unsupported-image-placeholder[data-format="wmf"]:hover {
+    background: linear-gradient(135deg, #fde68a, #fcd34d) !important;
+    border-color: #d97706 !important;
+  }
+
+  /* Đặc biệt cho SVG - giới hạn kích thước */
+  .exam-content img[src*="image/svg"],
+  .api-question-item img[src*="image/svg"] {
+    max-width: 300px !important;
+    max-height: 200px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  /* Đặc biệt cho WMF - có thể cần xử lý đặc biệt */
+  .exam-content img[src*="image/wmf"],
+  .api-question-item img[src*="image/wmf"] {
+    max-width: 400px !important;
+    max-height: 300px !important;
+    width: auto !important;
+    height: auto !important;
+    background: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
+  }
+
+  /* Đặc biệt cho BMP - tối ưu hiển thị */
+  .exam-content img[src*="image/bmp"],
+  .api-question-item img[src*="image/bmp"] {
+    max-width: 100% !important;
+    height: auto !important;
+    image-rendering: -webkit-optimize-contrast !important;
+    image-rendering: crisp-edges !important;
+  }
+
+  /* Đặc biệt cho GIF - hỗ trợ animation */
+  .exam-content img[src*="image/gif"],
+  .api-question-item img[src*="image/gif"] {
+    max-width: 100% !important;
+    height: auto !important;
+    /* Giữ nguyên animation của GIF */
+  }
+
+  /* Đặc biệt cho JPG/JPEG - tối ưu chất lượng */
+  .exam-content img[src*="image/jpg"],
+  .exam-content img[src*="image/jpeg"],
+  .api-question-item img[src*="image/jpg"],
+  .api-question-item img[src*="image/jpeg"] {
+    max-width: 100% !important;
+    height: auto !important;
+    image-rendering: auto !important;
+    /* Tối ưu cho ảnh JPEG */
+  }
+}
+
+@layer base {
+  html {
+    @apply text-gray-900;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+  }
+
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  html::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  html::-webkit-scrollbar-track {
+    background: #f7fafc;
+  }
+
+  html::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+  }
+
+  html::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+  }
+
+  body {
+    @apply bg-gray-50 min-h-screen;
+    overflow-x: hidden;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+  }
+
+  body::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  body::-webkit-scrollbar-track {
+    background: #f7fafc;
+  }
+
+  body::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+  }
+
+  body::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+  }
+
+  h1 {
+    @apply text-3xl font-bold;
+  }
+
+  h2 {
+    @apply text-2xl font-bold;
+  }
+
+  h3 {
+    @apply text-xl font-bold;
+  }
+}
+
+@layer components {
+  /* CSS cho exam content scrolling - Khắc phục vấn đề cuộn chuột */
+  .exam-content-scroll {
+    /* Đảm bảo scrollbar luôn hiển thị khi cần */
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+
+    /* Cải thiện performance cuộn */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; /* Cho iOS Safari */
+
+    /* Đảm bảo cuộn mượt mà trên tất cả thiết bị */
+    overscroll-behavior: contain;
+  }
+
+  /* CSS cho sidebar container */
+  .exam-sidebar-container {
+    /* Đảm bảo sidebar không bị đè lên thanh điều hướng dưới cùng */
+    max-height: calc(100vh - 64px - 80px - 20px);
+    height: calc(100vh - 64px - 80px - 20px);
+    min-height: 400px;
+    overflow: hidden;
+  }
+
+  /* CSS cho sidebar responsive và scroll */
+  .exam-sidebar-responsive {
+    /* Đảm bảo sidebar có thể responsive theo chiều dọc */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 100%;
+    min-height: 400px;
+    overflow: hidden;
+  }
+
+  .exam-sidebar-scrollable {
+    /* Phần có thể scroll của sidebar */
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    /* Tăng padding để có thể scroll được nhiều hơn */
+    padding-bottom: 60px;
+    padding-top: 10px;
+  }
+
+  /* CSS cho mobile sidebar overlay */
+  .mobile-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .mobile-sidebar-content {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 320px;
+    background: white;
+    box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-sidebar-header {
+    flex-shrink: 0;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(to right, #eff6ff, #dbeafe);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .mobile-sidebar-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    /* Đảm bảo có thể scroll được trên tất cả các chiều cao màn hình */
+    max-height: calc(100vh - 80px);
+    min-height: 0;
+    /* Tăng padding để có thể scroll được nhiều hơn */
+    padding-bottom: 40px;
+    padding-top: 10px;
+  }
+
+  /* CSS cho thanh điều hướng dưới responsive */
+  .exam-bottom-navigation {
+    /* Đảm bảo thanh điều hướng luôn hiển thị */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+    /* Responsive padding */
+    padding: 0.75rem 1.5rem;
+    /* Đảm bảo chiều cao tối thiểu */
+    min-height: 60px;
+    /* Flex layout cho responsive */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    /* Đảm bảo luôn hiển thị trên mobile */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+    /* Đảm bảo nút menu không bị tràn ra ngoài */
+    overflow: visible;
+  }
+
+  /* Responsive cho màn hình nhỏ */
+  @media (max-height: 600px) {
+    .exam-bottom-navigation {
+      padding: 0.5rem 1rem;
+      min-height: 50px;
+    }
+
+    /* Điều chỉnh chiều cao sidebar khi thanh điều hướng nhỏ hơn */
+    .exam-sidebar-container {
+      max-height: calc(100vh - 64px - 50px - 20px) !important;
+      height: calc(100vh - 64px - 50px - 20px) !important;
+    }
+
+    /* Mobile sidebar responsive cho màn hình thấp */
+    .mobile-sidebar-body {
+      max-height: calc(100vh - 60px) !important;
+      padding-bottom: 60px !important;
+    }
+  }
+
+  @media (max-height: 500px) {
+    .exam-bottom-navigation {
+      padding: 0.25rem 0.75rem;
+      min-height: 40px;
+    }
+
+    /* Điều chỉnh chiều cao sidebar khi thanh điều hướng rất nhỏ */
+    .exam-sidebar-container {
+      max-height: calc(100vh - 64px - 40px - 20px) !important;
+      height: calc(100vh - 64px - 40px - 20px) !important;
+    }
+
+    /* Mobile sidebar responsive cho màn hình rất thấp */
+    .mobile-sidebar-body {
+      max-height: calc(100vh - 50px) !important;
+      padding-bottom: 70px !important;
+    }
+  }
+
+  /* Mobile sidebar responsive cho các chiều cao khác nhau */
+  @media (max-height: 700px) {
+    .mobile-sidebar-body {
+      max-height: calc(100vh - 70px) !important;
+      padding-bottom: 50px !important;
+    }
+  }
+
+  @media (max-height: 800px) {
+    .mobile-sidebar-body {
+      max-height: calc(100vh - 75px) !important;
+      padding-bottom: 45px !important;
+    }
+  }
+
+  @media (max-height: 900px) {
+    .mobile-sidebar-body {
+      max-height: calc(100vh - 80px) !important;
+      padding-bottom: 40px !important;
+    }
+  }
+
+  /* Đảm bảo mobile sidebar luôn có thể scroll */
+  @media (max-width: 1024px) {
+    .mobile-sidebar-body {
+      /* Luôn có thể scroll trên mobile */
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      overscroll-behavior: contain !important;
+      /* Đảm bảo không bị che bởi thanh navigation */
+      padding-bottom: 30px !important;
+      padding-top: 15px !important;
+      /* Tăng không gian scroll */
+      margin-bottom: 10px !important;
+    }
+
+    /* Đảm bảo ExamSidebar scroll được trên mobile */
+    .exam-sidebar-responsive {
+      height: 100% !important;
+      max-height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+
+    .exam-sidebar-scrollable {
+      flex: 1 !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+      overscroll-behavior: contain !important;
+      min-height: 0 !important;
+      /* Đảm bảo có thể scroll đến cuối danh sách câu hỏi */
+      padding-bottom: 80px !important;
+      padding-top: 15px !important;
+      /* Tăng margin để có thể scroll được nhiều hơn */
+      margin-bottom: 30px !important;
+      /* Smooth scrolling */
+      scroll-behavior: smooth !important;
+    }
+  }
+
+  /* CSS cho nút menu toggle cố định trên mobile */
+  .submit-menu-button {
+    position: relative;
+    z-index: 60;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+    /* Đảm bảo luôn hiển thị trên mobile */
+    display: block;
+    /* Đảm bảo nút không bị tràn ra ngoài thanh ngang */
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  /* Đảm bảo nút menu không bị ẩn khi tắt màn hình */
+  @media (max-width: 1024px) {
+    .submit-menu-button {
+      position: relative !important;
+      z-index: 60 !important;
+      transform: translateZ(0) !important;
+      -webkit-transform: translateZ(0) !important;
+      will-change: transform !important;
+      display: block !important;
+      flex-shrink: 0 !important;
+      margin-left: auto !important;
+    }
+
+    /* Đảm bảo thanh navigation luôn hiển thị trên mobile */
+    .exam-bottom-navigation {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 50 !important;
+      transform: translateZ(0) !important;
+      -webkit-transform: translateZ(0) !important;
+      will-change: transform !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: 0.75rem 1.5rem !important;
+      min-height: 60px !important;
+      overflow: visible !important;
+    }
+
+    /* Thêm padding bottom cho body để tránh bị che bởi thanh navigation */
+    body {
+      padding-bottom: 80px !important;
+    }
+
+    /* Đảm bảo nút menu có kích thước phù hợp */
+    .submit-menu-button {
+      min-width: 48px !important;
+      min-height: 48px !important;
+      padding: 12px !important;
+      border-radius: 50% !important;
+      background: #dbeafe !important;
+      border: 2px solid #3b82f6 !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+  }
+
+  /* Webkit scrollbar styling (Chrome, Safari, Edge) */
+  .exam-content-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .exam-content-scroll::-webkit-scrollbar-track {
+    background: #f7fafc;
+    border-radius: 4px;
+  }
+
+  .exam-content-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+
+  .exam-content-scroll::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+  }
+
+  .exam-content-scroll::-webkit-scrollbar-corner {
+    background: #f7fafc;
+  }
+
+  /* Responsive scrollbar cho mobile */
+  @media (max-width: 768px) {
+    .exam-content-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .exam-content-scroll {
+      scrollbar-width: thin;
+    }
+  }
+
+  /* Đảm bảo focus outline cho accessibility */
+  .exam-content-scroll:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  /* Cải thiện cuộn cho các element con */
+  .exam-content-scroll * {
+    scroll-margin-top: 1rem;
+  }
+
+  /* CSS cho responsive images trong exam */
+  .exam-responsive-img {
+    max-width: min(100%, 680px) !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+    margin: 0 auto !important;
+  }
+
+  /* Đảm bảo container của ảnh không bị overflow */
+  .exam-content img,
+  .exam-content [data-img],
+  .exam-content picture {
+    max-width: min(100%, 680px) !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Responsive cho các màn hình lớn hơn */
+  @media (min-width: 640px) {
+    .exam-responsive-img,
+    .exam-content img,
+    .exam-content [data-img],
+    .exam-content picture {
+      max-width: min(100%, 720px) !important;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .exam-responsive-img,
+    .exam-content img,
+    .exam-content [data-img],
+    .exam-content picture {
+      max-width: min(100%, 760px) !important;
+    }
+  }
+
+  /* Container wrapper để đảm bảo ảnh không tràn */
+  .exam-image-container {
+    max-width: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Cố định khung lời giải với scroll dọc và ngang khi cần */
+  .explanation-scroll {
+    max-height: 60vh;
+    overflow-y: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .explanation-scroll::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+  /* .katex:not(.katex-display) {
+    margin-left: 0.1em !important;
+    margin-right: 0.1em !important;
+    display: inline-block;
+    vertical-align: middle;
+  } */
+}
+
+@layer utilities {
+  /* Utility classes bổ sung cho scrolling */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+
+  .overscroll-contain {
+    overscroll-behavior: contain;
+  }
+
+  .overscroll-auto {
+    overscroll-behavior: auto;
+  }
+
+  /* Ẩn scrollbar nhưng vẫn cho phép cuộn (nếu cần) */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Ẩn scrollbar nhưng vẫn giữ chức năng scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* Avatar override for Ant Design Avatar component used in intro page */
+.ss-avatar > img {
+  object-fit: fill;
+}
+
+/* Toast notification styles for better mobile/tablet support */
+/* Override react-toastify default styles */
+.Toastify__toast-container {
+  z-index: 99999 !important;
+  position: fixed !important;
+}
+
+/* Mobile styles - Stack toasts vertically, full width with padding */
+@media only screen and (max-width: 768px) {
+  .Toastify__toast-container {
+    top: 16px !important;
+    left: 16px !important;
+    right: 16px !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .Toastify__toast-container--top-right {
+    left: 16px !important;
+    right: 16px !important;
+  }
+
+  .Toastify__toast {
+    margin-bottom: 12px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    min-height: 64px !important;
+    padding: 16px !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+  }
+
+  .Toastify__toast-body {
+    padding: 0 8px !important;
+    margin: auto 0 !important;
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+  }
+
+  .Toastify__close-button {
+    opacity: 0.7 !important;
+    align-self: center !important;
+  }
+
+  .Toastify__progress-bar {
+    height: 4px !important;
+  }
+}
+
+/* Tablet styles */
+@media only screen and (min-width: 769px) and (max-width: 1024px) {
+  .Toastify__toast-container {
+    top: 16px !important;
+    right: 16px !important;
+    width: 400px !important;
+  }
+
+  .Toastify__toast {
+    margin-bottom: 10px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    min-height: 72px !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+  }
+
+  .Toastify__toast-body {
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+  }
+}
+
+/* Desktop styles */
+@media only screen and (min-width: 1025px) {
+  .Toastify__toast-container {
+    top: 16px !important;
+    right: 16px !important;
+    width: 420px !important;
+  }
+
+  .Toastify__toast {
+    margin-bottom: 8px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+/* Enhanced styling for all toasts */
+.Toastify__toast {
+  font-family: inherit !important;
+  font-weight: 500 !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.Toastify__toast--success {
+  background: #10b981 !important;
+  color: white !important;
+}
+
+.Toastify__toast--error {
+  background: #ef4444 !important;
+  color: white !important;
+}
+
+.Toastify__toast--info {
+  background: #3b82f6 !important;
+  color: white !important;
+}
+
+.Toastify__toast--warning {
+  background: #f59e0b !important;
+  color: white !important;
+}
+
+/* Progress bar colors */
+.Toastify__progress-bar--success {
+  background: rgba(255, 255, 255, 0.7) !important;
+}
+
+.Toastify__progress-bar--error {
+  background: rgba(255, 255, 255, 0.7) !important;
+}
+
+.Toastify__progress-bar--info {
+  background: rgba(255, 255, 255, 0.7) !important;
+}
+
+.Toastify__progress-bar--warning {
+  background: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Scrollbar cho practice exam - nhỏ và trong suốt */
+.practice-exam-scroll {
+  scrollbar-width: thin; 
+  scrollbar-color: #94A3B8 transparent; 
+}
+
+
+.practice-exam-scroll::-webkit-scrollbar {
+  width: 4px; 
+}
+
+.practice-exam-scroll::-webkit-scrollbar-track {
+  background: transparent; /* Khung trong suốt/ẩn */
+}
+
+.practice-exam-scroll::-webkit-scrollbar-thumb {
+  background: #94A3B8; /* Màu thanh lăn */
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.practice-exam-scroll::-webkit-scrollbar-thumb:hover {
+  background: #64748B; /* Màu đậm hơn khi hover */
+}
+
+/* ======================== ẨN WIDGET NỔI KHI POPUP CÂU HỎI MỞ ======================== */
+/* Khi QuestionPopup mở, ẩn tất cả widget bên thứ 3 (livechat, nút gọi, v.v.) */
+body.question-popup-open iframe[src*="subiz"],
+body.question-popup-open iframe[src*="tawk"],
+body.question-popup-open iframe[src*="crisp"],
+body.question-popup-open iframe[src*="intercom"],
+body.question-popup-open iframe[src*="livechat"],
+body.question-popup-open iframe[src*="chat"],
+body.question-popup-open [id*="subiz"],
+body.question-popup-open [id*="tawk"],
+body.question-popup-open [id*="crisp"],
+body.question-popup-open [id*="intercom"],
+body.question-popup-open [id*="livechat"],
+body.question-popup-open [id*="chat-widget"],
+body.question-popup-open [id*="fc_frame"],
+body.question-popup-open [class*="subiz"],
+body.question-popup-open [class*="tawk"],
+body.question-popup-open [class*="crisp"],
+body.question-popup-open [class*="intercom"],
+body.question-popup-open [class*="livechat"],
+body.question-popup-open [class*="chat-widget"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+
+/* Target trực tiếp các widget thường gặp ở Việt Nam */
+body.question-popup-open [id*="sbz"],
+body.question-popup-open [id*="zalo"],
+body.question-popup-open [id*="hotline"],
+body.question-popup-open [id*="contact-btn"],
+body.question-popup-open [id*="phone-btn"],
+body.question-popup-open [id*="float-btn"],
+body.question-popup-open [class*="sbz"],
+body.question-popup-open [class*="zalo-chat"],
+body.question-popup-open [class*="hotline"],
+body.question-popup-open [class*="float-contact"],
+body.question-popup-open [class*="contact-float"],
+body.question-popup-open [class*="phone-float"],
+body.question-popup-open [class*="btn-call"],
+body.question-popup-open [class*="call-btn"],
+body.question-popup-open a[href*="tel:"],
+body.question-popup-open a[href*="zalo"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

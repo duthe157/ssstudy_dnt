@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://ssstudy.vn
+
+# Sitemaps
+Sitemap: https://ssstudy.vn/sitemap.xml

@@ -1,0 +1,33 @@
+{
+    "sign_up": {
+        "from": "SSStudy.vn Chào Mừng <no_reply@luyenthitiendat.vn>",
+        "subject": "Chào mừng @fullname@ đăng ký thành công!",
+        "html": "<h2>Chào mừng @fullname@ đã đến với SSStudy.vn .</h2><p><b>Bắt đầu thôi!</b></p>"
+    },
+    "forgot_password": {
+        "from": "SSStudy.vn <no_reply@luyenthitiendat.vn>",
+        "subject": "Mật khẩu mới - SSStudy.vn!",
+        "html": "<p>Xin chào <b>@fullname@</b></p><p>Đây là mật khẩu mới của bạn: <b>@link@</b>. Chúc bạn có những trải nghiệm học tập tuyệt vời cùng www.ssstudy.vn</p><p>*** Đây là email tự động. Vui lòng không trả lời Email này. Xin cảm ơn!<p/>"
+    },
+    "send_password_pending_payment": {
+        "from": "SSStudy.vn <no_reply@luyenthitiendat.vn>",
+        "subject": "Thông tin đăng nhập - SSStudy.vn!",
+        "html": "<p>Xin chào <b>@fullname@</b></p><p>Đây là mật khẩu đăng nhập của bạn: <b>@link@</b>. Chúc bạn có những trải nghiệm học tập tuyệt vời cùng www.ssstudy.vn</p><p>Vui lòng đăng nhập để thay đổi thông tin cá nhân.</p><p>*** Đây là email tự động. Vui lòng không trả lời Email này. Xin cảm ơn!<p/>"
+    },
+    "confirm_order": {
+        "from": "SSStudy.vn <no_reply@luyenthitiendat.vn>",
+        "subject": "Xác nhận thông tin đặt hàng - SSSTUDY.VN"
+    },
+    "cancel_order": {
+        "from": "SSStudy.vn <no_reply@luyenthitiendat.vn>",
+        "subject": "Hủy đơn hàng thành công -  SSStudy.vn"
+    },
+    "verify_email_registration": {
+        "from": "SSStudy.vn <no_reply@luyenthitiendat.vn>",
+        "subject": "Xác thực Email đăng ký - SSStudy.vn!"
+    },
+    "notify_new_user": {
+        "from": "SSStudy.vn <no_reply@luyenthitiendat.vn>",
+        "subject": "Xác nhận thông tin người dùng mới - SSSTUDY.VN"
+    }
+}

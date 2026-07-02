@@ -1,0 +1,67 @@
+@mixin text-ellipsis($lines: 1) {
+  overflow: hidden;
+  min-width: 0;
+
+  @if $lines == 1 {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  } @else {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: $lines;
+  }
+}
+
+.aboutCard {
+  border: 1px solid #e8e8e8;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.heroImageContainer {
+  position: relative;
+  width: 588px;
+  height: 433px;
+  overflow: hidden;
+  border-radius: 6.93px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .heroImage {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 6.93px;
+  }
+}
+
+.textEllipsis2 {
+  @include text-ellipsis(2);
+
+  span {
+    display: block;
+    height: calc(2lh);
+  }
+}
+
+.textEllipsis3 {
+  @include text-ellipsis(3);
+
+  span {
+    display: block;
+    height: calc(3lh);
+  }
+}
+
+@media screen and (max-width: 1024px) {
+  .heroImageContainer {
+    width: 100%;
+    max-width: 588px;
+    height: auto;
+    aspect-ratio: 588 / 433;
+    margin-top: 24px;
+  }
+}

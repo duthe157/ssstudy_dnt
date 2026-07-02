@@ -1,0 +1,195 @@
+.searchable-select {
+    position: relative;
+    width: 100%;
+    min-width: 200px;
+}
+
+.select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 40px;
+}
+
+.select-trigger:hover {
+    border-color: #4285f4;
+}
+
+.select-trigger.open {
+    border-color: #4285f4;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: 0 2px 4px rgba(66, 133, 244, 0.1);
+}
+
+.select-text {
+    flex: 1;
+    text-align: left;
+    color: #333;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.select-text:empty::before {
+    content: attr(data-placeholder);
+    color: #999;
+}
+
+.select-arrow {
+    margin-left: 8px;
+    color: #666;
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.select-arrow.up {
+    transform: rotate(180deg);
+}
+
+.select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #4285f4;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-height: 300px;
+    overflow: hidden;
+}
+
+.search-container {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    background: #f9f9f9;
+}
+
+.search-input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.search-input:focus {
+    border-color: #4285f4;
+}
+
+.options-container {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.select-option {
+    padding: 10px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.select-option:hover {
+    background-color: #f5f5f5;
+}
+
+.select-option.selected {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    font-weight: 500;
+}
+
+.select-option:last-child {
+    border-bottom: none;
+}
+
+.no-options {
+    padding: 12px;
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    font-size: 14px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .searchable-select {
+        min-width: 150px;
+    }
+    
+    .select-trigger {
+        padding: 6px 10px;
+        min-height: 36px;
+    }
+    
+    .select-text {
+        font-size: 13px;
+    }
+    
+    .select-option {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
+    .search-input {
+        font-size: 13px;
+        padding: 5px 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .searchable-select {
+        min-width: 120px;
+    }
+    
+    .select-trigger {
+        padding: 5px 8px;
+        min-height: 32px;
+    }
+    
+    .select-text {
+        font-size: 12px;
+    }
+    
+    .select-option {
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+    
+    .search-input {
+        font-size: 12px;
+        padding: 4px 6px;
+    }
+}
+
+/* Custom scrollbar for options */
+.options-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.options-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.options-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.options-container::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}

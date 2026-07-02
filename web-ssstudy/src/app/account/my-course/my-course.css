@@ -1,0 +1,507 @@
+/* Main Container - Override parent CSS */
+.form-area {
+  width: 100% !important;
+  max-width: none !important;
+  align-self: flex-start;
+  margin-bottom: 5px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Form Block - Ensure proper sizing */
+.form-block {
+  width: 100%;
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Section Title */
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin: 20px 0;
+  display: none; /* Hidden because tabs serve as titles */
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: #4285f4;
+}
+
+.section-title:first-of-type {
+  margin-top: 0;
+}
+
+/* Breadcrumb */
+.breadcrumb-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+/* ==== Filters ==== */
+.filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* ==== Tabs ==== */
+.course-tabs {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #eee;
+  padding: 0 4px;
+}
+
+.tab-item {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: #757575;
+  padding: 14px 0;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+}
+
+.tab-item:hover {
+  color: #4285f4;
+}
+
+.tab-item.active {
+  color: #4285f4;
+}
+
+.tab-item.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #4285f4;
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 -1px 4px rgba(66, 133, 244, 0.2);
+}
+
+.filter-select {
+  min-width: 150px;
+  flex: 1;
+}
+
+/* Compatibility styles for SearchableSelect */
+.filters-row .searchable-select {
+  flex: 1;
+  min-width: 150px;
+}
+
+.filters-row .searchable-select .select-trigger {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  min-height: 40px;
+}
+
+.filters-row .searchable-select .select-trigger:hover {
+  border-color: #4285f4;
+}
+
+.filter-select:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* ==== Course Grid ==== */
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* ==== Course Card ==== */
+.course-card {
+  background: white;
+  border-radius: 8px;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Course Image - Now using Tailwind classes, keeping for backward compatibility if needed */
+
+/* Course Category */
+.course-category {
+  font-size: 14px;
+  color: #4285f4;
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+/* Start Course Button */
+.btn-start-course {
+  background: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+  width: 100%;
+  margin-top: auto;
+}
+
+.btn-start-course:hover {
+  background: #3367d6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+}
+
+.btn-extended-course {
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+  width: 100%;
+  margin-top: auto;
+}
+
+.btn-extended-course:hover {
+  background: #d32f2f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+}
+
+.btn-expired-course {
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  width: 100%;
+  margin-top: auto;
+}
+
+.btn-expired-course:hover {
+  background: #388e3c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+/* Course Content */
+.course-content {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
+}
+
+/* Teacher Avatar (legacy - keep for backward compatibility) */
+.teacher-avatar {
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.teacher-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Course Title */
+.course-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0;
+  color: #666;
+  min-height: auto;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.course-title a {
+  color: #666;
+  text-decoration: none;
+}
+
+.course-title a:hover {
+  color: #007bff;
+}
+
+/* Teacher Name */
+.teacher-name {
+  font-size: 14px;
+  margin-bottom: 12px;
+  color: #666;
+  flex: 1;
+  margin-top: 2px;
+}
+
+.teacher-name a {
+  color: #666;
+  text-decoration: none;
+}
+
+.teacher-name a:hover {
+  color: #007bff;
+}
+
+/* Loading & No Data */
+.loading,
+.no-data {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+}
+
+/* ==== Pagination ==== */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 32px;
+  padding: 16px 0;
+  flex-wrap: wrap;
+}
+
+.pagination li {
+  list-style: none;
+}
+
+.pagination li a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.pagination li a:hover {
+  background: #f5f5f5;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.pagination li.active a {
+  background: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.pagination li.disabled a {
+  color: #ccc;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.pagination li.break a {
+  border: none;
+  background: none;
+  cursor: default;
+}
+
+.pagination li.break a:hover {
+  background: none;
+  border: none;
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .course-tabs {
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .course-tabs::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+
+  .tab-item {
+    font-size: 15px;
+    padding: 10px 0;
+  }
+}
+
+/* ==== Responsive ==== */
+@media (max-width: 1200px) {
+  .form-block {
+    padding: 20px;
+  }
+
+  .course-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 992px) {
+  .form-block {
+    padding: 16px;
+  }
+
+  .course-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .pagination {
+    gap: 6px;
+  }
+
+  .pagination li a {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-block {
+    padding: 12px;
+  }
+
+  .course-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .filters-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .filter-select {
+    min-width: unset;
+    width: 100%;
+  }
+
+  /* Image container now uses Tailwind aspect-[279/210] which handles responsiveness automatically */
+
+  .btn-start-course {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+
+  .pagination {
+    gap: 4px;
+    margin-top: 24px;
+  }
+
+  .pagination li a {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-block {
+    padding: 8px;
+  }
+
+  .course-card {
+    padding: 16px;
+  }
+
+  /* Image container now uses Tailwind aspect-[279/210] which handles responsiveness automatically */
+
+  .btn-start-course {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+
+  .course-title {
+    font-size: 15px;
+    min-height: 44px;
+  }
+
+  .pagination {
+    gap: 2px;
+    margin-top: 20px;
+  }
+
+  .pagination li a {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    font-size: 11px;
+  }
+
+  /* Hide some pagination items on very small screens */
+  .pagination li:not(.active):not(.previous):not(.next):not(.break) {
+    display: none;
+  }
+
+  .pagination li.active,
+  .pagination li.previous,
+  .pagination li.next,
+  .pagination li.break {
+    display: block;
+  }
+}

@@ -1,0 +1,10 @@
+export const LIST_TESTING = 'LIST_TESTING';
+export const CREATE_TESTING = 'CREATE_TESTING';
+export const SHOW_TESTING = 'SHOW_TESTING';
+export const CONFIRM_TESTING = 'CONFIRM_TESTING';
+export const UPDATE_TESTING = 'UPDATE_TESTING';
+export const DELETE_TESTING = 'DELETE_TESTING';
+export const ADD_DELETE = 'ADD_DELETE';
+export const CHECK_ALL = 'CHECK_ALL';
+export const UPDATE_POINT = 'CHECK_ALL';
+export const DATA_REMOVE_TESTING = 'DATA_REMOVE_TESTING';

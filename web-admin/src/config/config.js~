@@ -1,0 +1,4 @@
+export const webURL = 'https://dev.luyenthitiendat.vn';
+// export const baseURL = 'https://api.luyenthitiendat.vn';
+export const baseURL = 'http://localhost:4549';
+export const imgURL =  'https://media.luyenthitiendat.vn/';

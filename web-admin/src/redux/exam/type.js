@@ -1,0 +1,16 @@
+export const LIST_EXAMS = "LIST_EXAMS";
+export const CREATE_EXAMS = "CREATE_EXAMS";
+export const SHOW_EXAMS = "SHOW_EXAMS";
+export const UPDATE_EXAMS = "UPDATE_EXAMS";
+export const COPY_EXAM = "COPY_EXAM";
+export const DELETE_EXAMS = "DELETE_EXAMS";
+export const ADD_DELETE = "ADD_DELETE";
+export const CHECK_ALL = "CHECK_ALL";
+export const LIST_CLASS = "LIST_CLASS";
+export const ADD_CLASSROOM = "ADD_CLASSROOM";
+export const REMOVE_CLASSROOM = "REMOVE_CLASSROOM";
+export const IMPORT_POINT = "IMPORT_POINT";
+export const REPORT_CLASS = "REPORT_CLASS";
+export const SEND = "SEND";
+export const PREVIEW_LIST_QUESTION = "PREVIEW_LIST_QUESTION";
+export const DATA_REMOVE_EXAM = "DATA_REMOVE_EXAM";

@@ -1,0 +1,8 @@
+export const LIST_REPORT_BUG = 'LIST_REPORT_BUG';
+export const CREATE_REPORT_BUG = 'CREATE_REPORT_BUG';
+export const SHOW_REPORT_BUG = 'SHOW_REPORT_BUG';
+export const UPDATE_REPORT_BUG = 'UPDATE_REPORT_BUG';
+export const DELETE_REPORT_BUG = 'DELETE_REPORT_BUG';
+export const ADD_DELETE = 'ADD_DELETE';
+export const CHECK_ALL = 'CHECK_ALL';
+export const DATA_REMOVE_BUG = 'DATA_REMOVE_BUG';

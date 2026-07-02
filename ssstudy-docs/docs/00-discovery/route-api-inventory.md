@@ -1,0 +1,142 @@
+# Route and API Inventory
+
+## 1. Route web-admin
+Danh sách route được xác định từ [web-admin/src/components/Master.js](../..\web-admin\src\components\Master.js):
+- /login
+- /
+- /classroom/review
+- /book
+- /book/create
+- /book/:id/edit
+- /book/review
+- /book-id
+- /book-id/create
+- /book-id/:id/code
+- /classroom/group
+- /classroom-offline
+- /classroom-online
+- /classroom/create
+- /classroom/:id/edit
+- /classroom/:id/code
+- /classroom/:id/report
+- /classroom/:id/member
+- /iframe
+- /student
+- /student/create
+- /admin
+- /admin/create
+- /testing
+- /exam
+- /exam/create
+- /exam/category
+- /exam-word
+- /exam-word/create
+- /exam-word/competition-part
+- /question
+- /subject
+- /chapter
+- /lesson
+- /document
+- /document-category
+- /settings
+- /settings/home-page
+- /settings/intro-page
+- /message
+- /schedule
+- /bill
+- /bill-refund
+- /bill-report
+- /blog
+- /blog-category
+- /credit
+- /order
+- /report-bug
+- /coupon
+- /quick-payments
+- /teachers-team
+- /admin-ceo
+
+## 2. Route web-ssstudy
+Các route được xác định từ cấu trúc thư mục [web-ssstudy/src/app](../..\web-ssstudy\src\app):
+- /auth/signin
+- /auth/signup
+- /auth/forgot-password
+- /account/credit-history
+- /account/order-history
+- /account/my-course
+- /khoa-hoc
+- /khoa-hoc/[id]
+- /sach
+- /sach/[alias]
+- /sach-id
+- /sach-id/[alias]
+- /tai-lieu
+- /tai-lieu/[id]
+- /thi-thu
+- /thi-thu/word-exam/[id]
+- /thi-thu/result/[id]
+- /gio-hang
+- /thanh-toan/[id]
+- /ban-tin
+- /tin-tuc/[alias]/[slug]
+- /giao-vien
+- /giao-vien/[alias]
+- /account/change-password
+- /thong-bao/[id]
+
+## 3. API endpoint backend
+Danh sách endpoint được định nghĩa trong [api-develop/app/routes/routes.js](../..\api-develop\app\routes\routes.js):
+- POST /auth/signin
+- POST /auth/signup
+- POST /auth/google-auth
+- POST /forgot-password
+- POST /user/view
+- POST /user/profile
+- POST /user/update-profile
+- POST /user/change-password
+- GET/POST /classroom-list
+- POST /classroom-view
+- POST /classroom-reviews
+- POST /classroom-group-list
+- POST /classroom-chapter-category
+- POST /document/list-public
+- POST /document/detail
+- POST /book/list
+- POST /book/detail
+- POST /book/create
+- POST /book/update
+- POST /book/delete
+- POST /book-id/list-public
+- POST /book-id/detail
+- POST /order/create
+- POST /order/list
+- POST /order/detail
+- POST /cart/add
+- POST /cart/detail
+- POST /credit/payment
+- POST /credit/payos_hook
+- POST /blog/list-public
+- POST /blog/detail
+- POST /blog-category/list
+- POST /blog-category/detail
+- POST /exam-word/list
+- POST /exam-word/get-by-id
+- POST /exam-word/create
+- POST /exam-word/update
+- POST /exam-word/delete
+- POST /exam-word/scoring
+- POST /exam-word/report
+- POST /competition-part/list
+- POST /question-word/create
+- PUT /question-word/update
+- DELETE /question-word/delete
+
+## 4. Mapping frontend gọi API
+- web-ssstudy gọi /auth/signin, /auth/signup, /forgot-password thông qua [web-ssstudy/src/services/authService.ts](../..\web-ssstudy\src\services\authService.ts)
+- web-ssstudy gọi /order/list, /order/detail thông qua [web-ssstudy/src/app/account/order-history/page.tsx](../..\web-ssstudy\src\app\account\order-history\page.tsx)
+- web-ssstudy gọi /classroom-list và /subject/list trong các component giáo viên và khóa học
+- web-admin gọi /auth/signin và /user/profile qua [web-admin/src/redux/auth/action.js](../..\web-admin\src\redux\auth/action.js)
+
+## 5. API chưa được sử dụng hoặc chưa xác định nơi gọi
+- [CẦN XÁC NHẬN] nhiều endpoint trong [api-develop/app/routes/routes.js](../..\api-develop\app\routes\routes.js) chưa được map đầy đủ tới FE.
+- Một số endpoint như /page/update, /link-payment/update, /ceo-page/update có thể có admin UI riêng nhưng chưa được xác nhận đầy đủ trong phạm vi này.

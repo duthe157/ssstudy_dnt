@@ -1,0 +1,25 @@
+{
+  "extends": [
+    "development"
+  ],
+  "hints": {
+    "compat-api/css": [
+      "default",
+      {
+        "ignore": [
+          "-webkit-text-size-adjust",
+          "text-decoration-skip-ink",
+          "text-decoration-skip-ink: none",
+          "user-select",
+          "orphans",
+          "widows",
+          "backface-visibility",
+          "touch-action: pan-y",
+          "backdrop-filter",
+          "position: sticky",
+          "-webkit-mask"
+        ]
+      }
+    ]
+  }
+}

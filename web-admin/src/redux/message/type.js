@@ -1,0 +1,9 @@
+export const LIST_MESSAGE = 'LIST_MESSAGE';
+export const CREATE_MESSAGE = 'CREATE_MESSAGE';
+export const SHOW_MESSAGE = 'SHOW_MESSAGE';
+export const UPDATE_MESSAGE = 'UPDATE_MESSAGE';
+export const DELETE_MESSAGE = 'DELETE_MESSAGE';
+export const ADD_DELETE = 'ADD_DELETE';
+export const CHECK_ALL = 'CHECK_ALL';
+export const SEND_MESSAGE = 'SEND_MESSAGE';
+export const DATA_REMOVE_MESSAGE = 'DATA_REMOVE_MESSAGE';

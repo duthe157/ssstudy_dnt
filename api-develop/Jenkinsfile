@@ -1,0 +1,168 @@
+pipeline {
+    agent any
+    
+    environment {
+        APP_NAME = 'api-luyenthitiendat'
+        DOCKER_IMAGE = 'ssstudy-api'
+        DOCKER_TAG = "${BUILD_NUMBER}"
+        CONTAINER_NAME = 'ssstudy-api-container'
+        HOST_PORT = '3013'
+        CONTAINER_PORT = '3013'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Checking out source code...'
+                checkout scm
+            }
+        }
+        
+        stage('Inject Config Files') {
+            steps {
+                echo 'Injecting configuration files from Jenkins credentials...'
+                script {
+                    // Copy config files from Jenkins credentials to workspace
+                    withCredentials([
+                        file(credentialsId: 'config-default-json', variable: 'DEFAULT_JSON'),
+                        file(credentialsId: 'config-json', variable: 'CONFIG_JSON'),
+
+                        // file(credentialsId: 'config-production-json', variable: 'PRODUCTION_JSON')
+                    ]) {
+                        sh '''
+                            # Create config directory if not exists
+                            mkdir -p config
+                            
+                            # Remove existing config files if they exist
+                            rm -f config/default.json
+                            rm -f config/config.js
+                            
+                            # Copy config files
+                            cp $DEFAULT_JSON config/default.json
+                            cp $CONFIG_JSON config/config.js
+                            
+                            # Ensure proper permissions
+                            chmod 644 config/default.json
+                            chmod 644 config/config.js
+                            
+                            echo "Config files injected successfully:"
+                            ls -la config/
+                        '''
+                    }
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                echo 'Building Docker image...'
+                sh '''
+                    DOCKER_BUILDKIT=0 docker build --cpu-quota=600000 --memory=10g -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                    docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
+                    
+                    echo "Docker image built successfully:"
+                    docker images | grep ${DOCKER_IMAGE}
+                '''
+            }
+        }
+        
+        stage('Stop Old Container') {
+            steps {
+                echo 'Stopping and removing old container...'
+                sh '''
+                    docker stop ${CONTAINER_NAME} || true
+                    docker rm ${CONTAINER_NAME} || true
+                    echo "Old container removed"
+                '''
+            }
+        }
+        
+        stage('Run New Container') {
+            steps {
+                echo 'Running new container...'
+                sh '''
+                    docker run -d \
+                        --name ${CONTAINER_NAME} \
+                        --cpus=6 \
+                        --memory=10g \
+                        -p ${HOST_PORT}:${CONTAINER_PORT} \
+                        --restart unless-stopped \
+                        -e NODE_ENV=production \
+                        ${DOCKER_IMAGE}:latest
+                    
+                    echo "New container started"
+                    docker ps | grep ${CONTAINER_NAME}
+                '''
+            }
+        }
+        
+        stage('Health Check') {
+            steps {
+                echo 'Performing health check...'
+                sh '''
+                    # Wait for application to start
+                    sleep 10
+                    
+                    # Check if container is running
+                    docker ps | grep ${CONTAINER_NAME} || exit 1
+                    
+                    # Check container logs
+                    echo "Container logs:"
+                    docker logs ${CONTAINER_NAME} --tail 20
+                    
+                    # Optional: Check HTTP endpoint if you have a health endpoint
+                    # curl -f http://localhost:${HOST_PORT}/health || exit 1
+                    
+                    echo "Container is running successfully!"
+                '''
+            }
+        }
+        
+        stage('Cleanup Old Images') {
+            steps {
+                echo 'Cleaning up old Docker images...'
+                sh '''
+                    # Keep only the last 3 builds
+                    docker images ${DOCKER_IMAGE} --format "{{.Tag}}" | \
+                        grep -v latest | \
+                        sort -rn | \
+                        tail -n +4 | \
+                        xargs -I {} docker rmi ${DOCKER_IMAGE}:{} || true
+                    
+                    # Remove dangling images
+                    docker image prune -f
+                    
+                    echo "Cleanup completed"
+                '''
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Docker deployment completed successfully! ✅'
+            sh '''
+                echo "Container status:"
+                docker ps | grep ${CONTAINER_NAME}
+                
+                echo "Recent logs:"
+                docker logs ${CONTAINER_NAME} --tail 30
+            '''
+        }
+        
+        failure {
+            echo 'Docker deployment failed! ❌'
+            sh '''
+                echo "Container logs (if exists):"
+                docker logs ${CONTAINER_NAME} --tail 100 || true
+                
+                echo "Docker images:"
+                docker images | grep ${DOCKER_IMAGE} || true
+            '''
+        }
+        
+        always {
+            echo 'Build process completed'
+        }
+    }
+}

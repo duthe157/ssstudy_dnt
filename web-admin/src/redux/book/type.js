@@ -1,0 +1,13 @@
+export const LIST_BOOK = 'LIST_BOOK';
+export const CREATE_BOOK = 'CREATE_BOOK';
+export const SHOW_BOOK = 'SHOW_BOOK';
+export const UPDATE_BOOK = 'UPDATE_BOOK';
+export const DELETE_BOOK = 'DELETE_BOOK';
+export const ADD_DELETE = 'ADD_DELETE';
+export const CHECK_ALL = 'CHECK_ALL';
+export const LIST_CATEGORY = 'LIST_CATEGORY';
+export const CHECK_INPUT_ITEM = 'CHECK_INPUT_ITEM';
+export const DATA_REMOVE_BOOK = 'DATA_REMOVE_BOOK';
+export const LIST_BOOK_CATEGORY = 'LIST_BOOK_CATEGORY';
+export const BOOK_UPDATE_RELATE = 'BOOK_UPDATE_RELATE';
+export const UPDATE_META_DATA = 'UPDATE_META_DATA';

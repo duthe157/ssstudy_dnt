@@ -1,0 +1,678 @@
+{
+    "ADMIN": true,
+    "OWNER": true,
+    "ADMIN_DEMO": {
+        "category": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "list_video"
+        ],
+        "chapter": [
+            "list",
+            "detail"
+        ],
+        "classroom": [
+            "list",
+            "detail",
+            "members",
+            "list_member",
+            "overview",
+            "codes",
+            "report",
+            "check_attend",
+            "list_chapter_category"
+        ],
+        "document": [
+            "list",
+            "show",
+            "detail"
+        ],
+        "exam": [
+            "list",
+            "detail",
+            "report",
+            "classrooms",
+            "count_pending"
+        ],
+        "question": [
+            "list",
+            "detail",
+            "answer"
+        ],
+        "review": [
+            "list",
+            "detail",
+            "achievement_board"
+        ],
+        "subject": [
+            "list",
+            "detail"
+        ],
+        "testing": [
+            "list",
+            "detail"
+        ],
+        "message": [
+            "list",
+            "detail"
+        ],
+        "upload": [
+            "list",
+            "detail"
+        ],
+        "user": [
+            "list",
+            "detail"
+        ],
+        "bill": [
+            "list",
+            "report",
+            "detail"
+        ],
+        "report_bug": [
+            "list",
+            "detail"
+        ]
+    },
+    "MANAGER": {
+        "category": true,
+        "classroom": true,
+        "document": true,
+        "document_category": true,
+        "question": true,
+        "registration": true,
+        "setting": true,
+        "testing": true,
+        "message": true,
+        "upload": true,
+        "review": true,
+        "order": true,
+        "classroom_review": true,
+        "classroom_group": true,
+        "coupon": true,
+        "blog": true,
+        "blog_category": true,
+        "page": ["list", "detail"],
+        "link_payment": ["list", "detail", "create", "update", "update_status", "update_user", "statistics"],
+        "credit": true,
+        "bill": true,
+        "label": true,
+        "user": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "hot_reset_password",
+            "admins",
+            "profile",
+            "get_admin_manager",
+            "accountants",
+            "check_code"
+        ],
+        "report_bug": true
+    },
+    "TEACHER": {
+        "category": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "list_video",
+            "create_video",
+            "update_video",
+            "delete_video",
+            "view_video"
+        ],
+        "chapter": [
+            "list",
+            "detail",
+            "create",
+            "update"
+        ],
+        "classroom": [
+            "list",
+            "create",
+            "update",
+            "detail",
+            "members",
+            "list_member",
+            "overview",
+            "access_by_code",
+            "generate_access_code",
+            "codes",
+            "delete_code",
+            "report",
+            "check_attend",
+            "update_buoihoc",
+            "add_member",
+            "remove_member",
+            "diff_buoi_da_hoc",
+            "list_chapter_category",
+            "update_category",
+            "add_chapter",
+            "remove_chapter",
+            "add_category",
+            "remove_category",
+            "update_position",
+            "update_meta_data",
+            "update_lesson_view_month"
+        ],
+        "document": [
+            "list",
+            "detail",
+            "create",
+            "update"
+        ],
+        "exam": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "delete",
+            "report",
+            "classrooms",
+            "add_classroom",
+            "remove_classroom",
+            "count_pending",
+            "import_result",
+            "send"
+        ],
+        "question": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "upload",
+            "answer"
+        ],
+        "review": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "achievement_board"
+        ],
+        "subject": [
+            "list",
+            "detail"
+        ],
+        "testing": true,
+        "message": true,
+        "upload": true,
+        "user": [
+            "list",
+            "detail",
+            "update",
+            "hot_reset_password"
+        ],
+        "bill": [
+            "list",
+            "report",
+            "detail"
+        ],
+        "report_bug": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "delete"
+        ]
+    },
+    "SUPPORTER": {
+        "category": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "delete",
+            "list_video",
+            "create_video",
+            "update_video",
+            "delete_video",
+            "view_video"
+        ],
+        "chapter": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "delete"
+        ],
+        "classroom_group": [
+            "list",
+            "detail"
+        ],
+        "classroom": [
+            "list",
+            "detail",
+            "members",
+            "list_member",
+            "overview",
+            "codes",
+            "report",
+            "check_attend",
+            "generate_access_code",
+            "list_chapter_category",
+            "update_category",
+            "add_chapter",
+            "remove_chapter",
+            "add_category",
+            "update_position",
+            "update_position",
+            "remove_category",
+            "update_lesson_view_month",
+            "check_classroom_attend",
+            "create",
+            "update",
+            "delete",
+            "list_chapter",
+            "update_meta_data"
+        ],
+        "classroom_review": true,
+        "document": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "delete"
+        ],
+        "exam_category": true,
+        "exam": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "delete",
+            "report",
+            "classrooms",
+            "add_classroom",
+            "remove_classroom",
+            "count_pending",
+            "import_result",
+            "send"
+        ],
+        "question": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "upload",
+            "answer",
+            "delete"
+        ],
+        "review": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "achievement_board"
+        ],
+        "subject": [
+            "list",
+            "detail"
+        ],
+        "message": true,
+        "testing": true,
+        "upload": true,
+        "user": [
+            "list",
+            "detail",
+            "check_code",
+            "hot_reset_password",
+            "admins",
+            "profile"
+        ],
+        "cart": true,
+        "report_bug": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "delete"
+        ],
+        "book_category": true,
+        "book": true,
+        "book_review": true
+    },
+    "ACCOUNTANT": {
+        "classroom": [
+            "list",
+            "detail",
+            "members",
+            "list_member",
+            "check_attend",
+            "list_chapter_category"
+        ],
+        "subject": [
+            "list",
+            "detail"
+        ],
+        "review": [
+            "list",
+            "achievement_board"
+        ],
+        "user": [
+            "list",
+            "detail",
+            "by_code",
+            "check_code",
+            "forgotten_pass",
+            "reset_password",
+            "change_password",
+            "hot_reset_password",
+            "create",
+            "admins",
+            "profile"
+        ],
+        "bill": [
+            "list",
+            "list_history",
+            "detail",
+            "create",
+            "update",
+            "report"
+        ],
+        "cart": true,
+        "credit": true
+    },
+    "STUDENT": {
+        "question_word": [
+            "detail"
+        ],
+        "page": [
+            "search_id"
+        ],
+        "book_id": [
+            "list_public",
+            "list_related",
+            "detail",
+            "view",
+            "get_noti",
+            "access_by_code"
+        ],
+        "book_id_course": [
+            "list",
+            "list_owned",
+            "detail",
+            "view"
+        ],
+        "search_history": [
+            "list",
+            "add_and_update",
+            "delete"
+        ],
+        "ceo_page": [
+            "detail"
+        ],
+        "book": [
+            "list_related"
+        ],
+        "exam_word_category": [
+            "list",
+            "detail"
+        ],
+        "exam_word": [
+            "check_password",
+            "list",
+            "list_practice",
+            "check_answer",
+            "get_by_id",
+            "scoring",
+            "explanation"
+        ],
+        "category": [
+            "list",
+            "detail",
+            "list_video",
+            "view_video",
+            "register_livestream"
+        ],
+        "chapter": [
+            "list",
+            "detail"
+        ],
+        "classroom": [
+            "list",
+            "list_related",
+            "detail",
+            "members",
+            "list_member",
+            "overview",
+            "access_by_code",
+            "list_chapter_category"
+        ],
+        "classroom_review": [
+            "list",
+            "create",
+            "send_review"
+        ],
+        "book_review": [
+            "send_review"
+        ],
+        "document": [
+            "list",
+            "show",
+            "detail"
+        ],
+        "exam": [
+            "list",
+            "detail",
+            "count_pending",
+            "preview",
+            "let_file",
+            "let_question",
+            "scoring",
+            "get_score",
+            "answer_link",
+            "let_score_file",
+            "let_score_question",
+            "verify_exam",
+            "stop_exam"
+        ],
+        "competition_part": [
+            "list"
+        ],
+        "review": [
+            "list",
+            "achievement_board"
+        ],
+        "question": [
+            "list",
+            "detail",
+            "answer",
+            "get_video"
+        ],
+        "setting": true,
+        "subject": [
+            "list",
+            "detail"
+        ],
+        "testing": [
+            "list",
+            "detail",
+            "create"
+        ],
+        "upload": true,
+        "user": [
+            "profile",
+            "update_profile",
+            "forgotten_pass",
+            "reset_password",
+            "change_password",
+            "rank",
+            "statistic",
+            "solienlac",
+            "bills",
+            "remove_account"
+        ],
+        "video": true,
+        "message": [
+            "list",
+            "detail",
+            "my",
+            "total_unread"
+        ],
+        "bill": [
+            "list",
+            "detail"
+        ],
+        "credit": [
+            "list",
+            "detail",
+            "payment",
+            "payment_payos",
+            "payos_detail_order",
+            "payos_update_order",
+            "payos_hook"
+        ],
+        "order": [
+            "list",
+            "detail",
+            "payment_info",
+            "payment_payos",
+            "payos_detail_order",
+            "payos_update_order"
+        ],
+        "cart": true,
+        "report_bug": [
+            "list",
+            "detail",
+            "create"
+        ]
+    },
+    "MEDIA": {
+        "user": [
+            "profile",
+            "admins"
+        ],
+        "book": true,
+        "classroom": true,
+        "classroom_group": ["list"],
+        "review": [
+            "list",
+            "achievement_board"
+        ],
+        "book_review": ["list", "create", "update", "delete"],
+        "file": true,
+        "blog": true,
+        "page": true,
+        "message": true,
+        "adult_evalution": true,
+        "iframe": ["list"]
+    },
+    "SALE_STAFF": {
+        "link_payment": [
+            "create",
+            "statistics",
+            "list",
+            "detail",
+            "update",
+            "update_status",
+            "update_user"
+        ],
+        "classroom": [
+            "list",
+            "list_chapter",
+            "codes",
+            "delete_code",
+            "generate_access_code",
+            "export_code"
+        ],
+        "classroom_group": [
+            "list"
+        ],
+        "book": [
+            "list"
+        ],
+        "chapter": [
+            "list"
+        ],
+        "review": [
+            "list",
+            "achievement_board"
+        ],
+        "user": [
+            "profile",
+            "list",
+            "student_detail",
+            "admins"
+        ]
+    },
+    "TRAINING_STAFF": {
+        "user": [
+            "profile",
+            "admins",
+            "list"
+        ],
+        "exam": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "delete",
+            "report",
+            "classrooms",
+            "add_classroom",
+            "remove_classroom",
+            "count_pending",
+            "import_result",
+            "send"
+        ],
+        "chapter": [
+            "list",
+            "detail",
+            "create",
+            "update"
+        ],
+        "category": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "list_video",
+            "create_video",
+            "update_video",
+            "delete_video",
+            "view_video"
+        ],
+        "report_bug": [
+            "list",
+            "detail",
+            "create",
+            "update",
+            "delete"
+        ],
+        "fast_gift": ["list"],
+        "exam_word_category": ["list"],
+        "classroom": true,
+        "book": ["list"],
+        "book_category": ["list"],
+        "classroom_group": true,
+        "classroom_review": ["list", "create"]
+    },
+    "SALE_MANAGER": {
+        "link_payment": [
+            "create",
+            "statistics",
+            "list",
+            "detail",
+            "update",
+            "update_status",
+            "update_user"
+        ],
+        "classroom": [
+            "list"
+        ],
+        "review": [
+            "list",
+            "achievement_board"
+        ],
+        "user": [
+            "profile",
+            "list",
+            "student_detail"
+        ]
+    }
+}

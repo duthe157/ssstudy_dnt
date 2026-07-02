@@ -1,0 +1,8 @@
+export const LIST_IFRAME = 'LIST_IFRAME';
+export const CREATE_IFRAME = 'CREATE_IFRAME';
+export const UPDATE_IFRAME = 'UPDATE_IFRAME';
+export const DELETE_IFRAME = 'DELETE_IFRAME';
+export const DETAIL_IFRAME = 'DETAIL_IFRAME';
+export const SIGN_UP_IFRAME = 'SIGN_UP_IFRAME';
+export const SIGN_UP_IFRAME_EMAIL = 'SIGN_UP_IFRAME_EMAIL';
+export const LOGIN_IFRAME= 'LOGIN_IFRAME';

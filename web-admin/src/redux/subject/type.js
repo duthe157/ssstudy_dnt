@@ -1,0 +1,8 @@
+export const LIST_SUBJECT = 'LIST_SUBJECT';
+export const CREATE_SUBJECT = 'CREATE_SUBJECT';
+export const SHOW_SUBJECT = 'SHOW_SUBJECT';
+export const UPDATE_SUBJECT = 'UPDATE_SUBJECT';
+export const DELETE_SUBJECT = 'DELETE_SUBJECT';
+export const ADD_DELETE = 'ADD_DELETE';
+export const CHECK_ALL = 'CHECK_ALL';
+export const DATA_REMOVE_SUBJECT = 'DATA_REMOVE_SUBJECT';

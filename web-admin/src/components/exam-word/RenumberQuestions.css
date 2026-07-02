@@ -1,0 +1,154 @@
+/**
+ * RenumberQuestions.css
+ * 
+ * Styles cho chức năng đánh số câu hỏi trong ExamCreate
+ */
+
+/* Button đánh số */
+.btn-outline-primary i.fa-list-ol {
+  font-size: 14px;
+}
+
+.btn-outline-primary .fa-list-ol {
+  margin-right: 4px;
+}
+
+/* Modal backdrop */
+.modal-backdrop.fade.show {
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+/* Modal container */
+.modal.show.d-block {
+  z-index: 1050;
+}
+
+/* Modal animation */
+.modal-dialog.animate.fade-down {
+  animation: fadeInDown 0.3s ease-in-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal content styling */
+.modal-content {
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+}
+
+/* Form styling trong modal */
+.form-group label.text-form-label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.form-group input[type="number"] {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+}
+
+.form-group input[type="number"]:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-text.text-muted {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-top: 0.5rem;
+}
+
+/* Close button */
+.modal-header .close {
+  padding: 0;
+  margin: -1rem -1rem -1rem auto;
+  background: transparent;
+  border: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #000;
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.modal-header .close:hover {
+  opacity: 0.75;
+}
+
+/* Button styles trong modal */
+.modal-footer .btn {
+  min-width: 80px;
+}
+
+.modal-footer .btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.modal-footer .btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #004085;
+}
+
+.modal-footer .btn-light {
+  background-color: #f8f9fa;
+  border-color: #f8f9fa;
+  color: #212529;
+}
+
+.modal-footer .btn-light:hover {
+  background-color: #e2e6ea;
+  border-color: #dae0e5;
+}
+
+/* Sub-section actions styling */
+.sub-section-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .btn-sm i.fa-list-ol {
+    font-size: 12px;
+  }
+}

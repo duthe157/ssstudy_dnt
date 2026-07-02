@@ -1,0 +1,10 @@
+export const LIST_VIDEO = 'LIST_VIDEO';
+export const CREATE_VIDEO = 'CREATE_VIDEO';
+export const SHOW_VIDEO = 'SHOW_VIDEO';
+export const UPDATE_VIDEO = 'UPDATE_VIDEO';
+export const DELETE_VIDEO = 'DELETE_VIDEO';
+export const ADD_DELETE = 'ADD_DELETE';
+export const CHECK_ALL = 'CHECK_ALL';
+export const LIST_CLASS = 'LIST_CLASS';
+export const ADD_CLASSROOM = 'ADD_CLASSROOM';
+export const REMOVE_CLASSROOM = 'REMOVE_CLASSROOM';

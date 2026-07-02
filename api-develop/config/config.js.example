@@ -1,0 +1,92 @@
+module.exports = {
+    FILE_DOMAIN: 'https://cdn.luyenthitiendat.vn',
+    TOKEN: {
+        EXPIRED_TOKEN: 7,
+        EXPIRED_FORGOTTEN_PASS: 7,
+        EXPIRED_KEY: 61758000,
+        LENGTH_KEY: 6,
+        SECRE_KEY: '',
+        MD5_BEFORE: '',
+        MD5_AFTER: '',
+
+        MD5_BEFORE_ADMIN: '',
+        MD5_AFTER_ADMIN: ''
+    },
+
+    OAUTH2: {
+        FB_CLIENT_ID: '',
+        FB_CLIENT_SECRET: '',
+        FB_REDIRECT_URL: ''
+    },
+
+    AMAZON: {
+        S3: {
+            ACESS_KEY: '',
+            SECURITY_KEY: '',
+            REGION: '',
+            BucketName: '',
+            Builder_BucketName: '',
+            DNS_BucketName: ''
+        },
+
+        SNS: {
+            ACESS_KEY: '',
+            SECURITY_KEY: '',
+            REGION: '',
+            TOPIC_ARN: '',
+            PROTOCOL: '',
+            ENDPOINT: ''
+        }
+    },
+
+    PAYMENT_STATUS: {
+        PENDING: 'PENDING',
+        PAID: 'PAID',
+        CANCEL: 'CANCEL',
+        INVALID: 'INVALID',
+        PAID_DEBIT: 'PAID_DEBIT'
+    },
+
+    USER_RESET_PASS: '',
+    ADMIN_RESET_PASS: '',
+
+    ADMIN_DEFAULT_PASS: 'abc123123',
+
+    USER_PREFIX: 'user',
+    ADMIN_PREFIX: 'admin',
+    TOKEN_PREFIX: 'token',
+
+    DEFAULT_TIMEZONE: 0,
+
+    COMMON_STATUS: {
+        ACTIVE: true,
+        DEACTIVE: false,
+        ASCENDING: 1,
+        DESCENDING: -1
+    },
+
+    PAGINATE: {
+        DEFAULT_OFFSET: 0,
+        DEFAULT_LIMIT: 25
+    },
+
+    API_TIMEOUT: 30000,
+    COOKIE_AFFILATE_EXPRIRE: 120,
+    LOG_CENTER: '',
+    SMTP: {
+        HOST: 'smtp.gmail.com',
+        PORT: 465,
+        SECURE: true,
+        USERNAME: '',
+        PASSWORD: ''
+    },
+
+    PAYOS: {
+        CLIENT_ID: '',
+        API_KEY: '',
+        CHECKSUM_KEY: ''
+    },
+    MAIL_MARKETING: '',
+    MAIL_DEVELOPER: '',
+    MAIL_BOOK_MATH: ''
+};

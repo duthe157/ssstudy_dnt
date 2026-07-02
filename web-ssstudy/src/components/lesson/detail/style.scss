@@ -1,0 +1,12 @@
+.app-layout.is-lesson {
+  background: #f5f6fa;
+  > main {
+    max-width: 100%;
+    > div {
+      padding: 0;
+    }
+  }
+  #footer {
+    display: none;
+  }
+}

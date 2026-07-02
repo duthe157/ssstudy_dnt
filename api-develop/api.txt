@@ -1,0 +1,62 @@
+Classroom List: 
+    Danh sách: https://api.luyenthitiendat.vn/my-classroom/list
+    Chi tiết lớp: https://api.luyenthitiendat.vn/my-classroom/detail
+        params {
+            id
+        }
+    Tổng quan: https://api.luyenthitiendat.vn/my-classroom/overview
+        params {
+            id
+            from_date,
+            to_date
+        }
+
+API Thông báo:
+    Danh sách: https://api.luyenthitiendat.vn/my-message/list
+        params {
+                limit
+                page
+            }
+    Chi tiết: https://api.luyenthitiendat.vn/my-message/detail
+        params {
+            id,
+            platform_msg_id: Không bắt buộc
+        }
+
+API Học Phí:
+    Danh sách: https://api.luyenthitiendat.vn/my-bill/list
+        params {
+                limit
+                page,
+                from_date,
+            to_date
+            }
+    Chi tiết: https://api.luyenthitiendat.vn/my-bill/detail
+        params {
+                id
+            }
+
+API Testing:
+    Danh sách: https://api.luyenthitiendat.vn/my-testing/list
+    params {
+                limit
+                page,
+                from_date,
+            to_date
+            }
+    Chi tiết: https://api.luyenthitiendat.vn/my-testing/detail
+        params {
+            id
+        }
+
+API Bài học:
+    https://api.luyenthitiendat.vn/my-classroom/list-chapter-lesson
+    params
+    {"classroom_id":"65d2c4b8bf20506a67660849"}
+
+Chi tiết bài học: https://api.luyenthitiendat.vn/category/detail
+{"id":"651903e4d8a21a6a23f885d1","classroom_id":"650cbd75f14ae872e6937372"}
+
+
+API làm bài: https://api.luyenthitiendat.vn/exam/detail
+{"id":"6522219ed8a21a6a23077cf6","classroom_id":"650cbd75f14ae872e6937372"}

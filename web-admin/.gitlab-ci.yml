@@ -1,0 +1,88 @@
+# GitLab CI/CD Pipeline cho React App
+# Deploy lên AWS S3 khi merge vào nhánh prod
+
+stages:
+  - build
+  - deploy
+
+variables:
+  NODE_VERSION: "16.20.1"
+
+# Cache node_modules để tăng tốc build
+cache:
+  paths:
+    - node_modules/
+
+# Build stage - chỉ chạy khi có thay đổi code
+build:
+  stage: build
+  image: node:${NODE_VERSION}
+  only:
+    - prod
+  script:
+    - echo "Installing dependencies (use ci if lockfile exists, else install)..."
+    - npm install
+    - echo "Building React app..."
+    - npm run build
+    - echo "Build completed successfully!"
+    - ls -la build/
+  artifacts:
+    paths:
+      - build/
+    expire_in: 1 hour
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+
+# Deploy stage - deploy lên AWS S3
+deploy_to_s3:
+  stage: deploy
+  image: amazon/aws-cli:latest
+  only:
+    - prod
+  dependencies:
+    - build
+  before_script:
+    - echo "Configuring AWS CLI..."
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region us-east-1
+    - aws configure set output json
+  script:
+    - echo "Starting deployment to S3..."
+    - echo "Bucket:" $BUCKETS_NAME
+    - echo "Syncing build files to S3..."
+    - aws s3 sync build/ s3://$BUCKETS_NAME/ --delete --exact-timestamps
+    - echo "Setting cache control for static files..."
+    - aws s3 cp s3://$BUCKETS_NAME/static/ s3://$BUCKETS_NAME/static/ --recursive --metadata-directive REPLACE --cache-control 'public, max-age=31536000'
+    - echo "Setting cache control for index.html..."
+    - aws s3 cp s3://$BUCKETS_NAME/index.html s3://$BUCKETS_NAME/index.html --metadata-directive REPLACE --cache-control 'no-cache, no-store, must-revalidate'
+    - echo "Deployment completed successfully!"
+    - echo "Website URL:" "http://$BUCKETS_NAME.s3-website-us-east-1.amazonaws.com"
+  after_script:
+    - echo "Cleaning up AWS credentials..."
+    - aws configure set aws_access_key_id ""
+    - aws configure set aws_secret_access_key ""
+
+# Notification job (optional)
+notify_success:
+  stage: deploy
+  image: alpine:latest
+  only:
+    - prod
+  dependencies: []
+  when: on_success
+  script:
+    - echo "Deployment to S3 completed successfully!"
+    - echo "Website is now live at:" "http://$BUCKETS_NAME.s3-website-us-east-1.amazonaws.com"
+
+notify_failure:
+  stage: deploy
+  image: alpine:latest
+  only:
+    - prod
+  dependencies: []
+  when: on_failure
+  script:
+    - echo "Deployment failed! Please check the logs above."
