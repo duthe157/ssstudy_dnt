@@ -18,6 +18,9 @@ Tài liệu này được tạo dựa trên việc reverse-engineer các source 
 - Frontend người dùng/học viên: web-ssstudy
 - Tài liệu dùng chung: ssstudy-docs
 
+## Tài liệu hạ tầng và vận hành
+- [SSStudy Infrastructure AS-IS and Target Recommendation](docs/03-infrastructure/SSSTUDY-INFRASTRUCTURE-AS-IS-AND-TARGET.md)
+
 ## Quy ước nhãn
 - [CẦN XÁC NHẬN]: nội dung chưa đủ bằng chứng từ source hoặc cần xác nhận với người dùng/nghiệp vụ.
 - [RỦI RO / TECHNICAL DEBT]: phần code có dấu hiệu trùng lặp, thiếu kiểm tra, không đồng nhất hoặc có khả năng gây lỗi.

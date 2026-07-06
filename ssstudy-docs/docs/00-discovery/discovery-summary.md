@@ -18,6 +18,9 @@
 - Blog and content pages
 - Configuration and admin content
 
+## Tài liệu hạ tầng và vận hành
+- [SSStudy Infrastructure AS-IS and Target Recommendation](../03-infrastructure/SSSTUDY-INFRASTRUCTURE-AS-IS-AND-TARGET.md)
+
 ## Các luồng có thể bắt đầu đặc tả
 - Đăng nhập/đăng xuất
 - Quản lý lớp học và khóa học

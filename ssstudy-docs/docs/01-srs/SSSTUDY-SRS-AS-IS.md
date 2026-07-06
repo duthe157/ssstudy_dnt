@@ -16,6 +16,8 @@
   - Nội dung có dấu hiệu bất nhất, thiếu xử lý hoặc khó bảo trì được ghi là [RỦI RO / TECHNICAL DEBT].
 
 ## 2. Mục đích tài liệu
+- Tài liệu hạ tầng và vận hành liên quan:
+  - [SSStudy Infrastructure AS-IS and Target Recommendation](../03-infrastructure/SSSTUDY-INFRASTRUCTURE-AS-IS-AND-TARGET.md)
 - Mục tiêu sử dụng:
   - Làm nền tảng cho bảo trì, sửa lỗi, onboarding, QA/UAT và phân tích tác động khi thay đổi hệ thống.
   - Hỗ trợ rà soát module hiện tại trước khi refactor hoặc xây dựng lại.
