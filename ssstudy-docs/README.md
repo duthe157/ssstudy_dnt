@@ -20,6 +20,7 @@ Tài liệu này được tạo dựa trên việc reverse-engineer các source 
 
 ## Tài liệu hạ tầng và vận hành
 - [SSStudy Infrastructure AS-IS and Target Recommendation](docs/03-infrastructure/SSSTUDY-INFRASTRUCTURE-AS-IS-AND-TARGET.md)
+ - [SSStudy Database Architecture Assessment (AS-IS & Recommendation)](docs/03-infrastructure/SSSTUDY-DATABASE-ARCHITECTURE-ASSESSMENT.md)
 
 ## Quy ước nhãn
 - [CẦN XÁC NHẬN]: nội dung chưa đủ bằng chứng từ source hoặc cần xác nhận với người dùng/nghiệp vụ.

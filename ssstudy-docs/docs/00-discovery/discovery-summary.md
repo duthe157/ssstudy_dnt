@@ -20,6 +20,7 @@
 
 ## Tài liệu hạ tầng và vận hành
 - [SSStudy Infrastructure AS-IS and Target Recommendation](../03-infrastructure/SSSTUDY-INFRASTRUCTURE-AS-IS-AND-TARGET.md)
+- [SSStudy Database Architecture Assessment (AS-IS & Recommendation)](../03-infrastructure/SSSTUDY-DATABASE-ARCHITECTURE-ASSESSMENT.md)
 
 ## Các luồng có thể bắt đầu đặc tả
 - Đăng nhập/đăng xuất

@@ -34,6 +34,7 @@
   - web-ssstudy/Dockerfile
   - web-ssstudy/Jenkinsfile
   - web-ssstudy/.gitlab-ci.yml
+- SSStudy Database Architecture Assessment: [SSSTUDY-DATABASE-ARCHITECTURE-ASSESSMENT.md](SSSTUDY-DATABASE-ARCHITECTURE-ASSESSMENT.md)
 - Mục đích sử dụng:
   - Onboard developer và DevOps mới.
   - Cài môi trường local.
