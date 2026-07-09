@@ -1,573 +1,755 @@
-# Authentication — SRS mục tiêu
+# Authentication / Tài khoản / Phân quyền — SRS mục tiêu
 
-Mục tiêu: Cung cấp giải pháp xác thực, ủy quyền và quản lý tài khoản để bảo mật toàn bộ hệ thống SSStudy. Tài liệu này mô tả yêu cầu nghiệp vụ, API đề xuất, domain model, kiến trúc module, UI, use case và user story để triển khai module từ đầu.
+> Tài liệu đặc tả yêu cầu phần mềm (SRS) cho module Authentication của hệ thống SSStudy.
+> Viết như thể hệ thống chưa có code. Mục tiêu: đủ chi tiết để developer triển khai hoàn chỉnh chỉ từ tài liệu này.
 
-- Tên module: Authentication / Account / Authorization
-- Mục tiêu nghiệp vụ: Đăng ký, đăng nhập, đăng xuất, refresh token, quản lý profile, quên mật khẩu, quản lý role/permission, cơ chế khóa tài khoản và policy mật khẩu.
-- Phạm vi: triển khai backend stateless access token (short-lived access token + refresh token), session/refresh management, password management, account lifecycle, và admin user management.
+---
 
-# 2. Actors and Roles
+## 1. Mục tiêu nghiệp vụ
 
-| Actor/Role | Typical permissions | Notes |
+Module Authentication là nền tảng bảo mật của toàn bộ hệ thống SSStudy. Module này cần đáp ứng:
+
+- Xác thực người dùng bằng email, số điện thoại hoặc mã học sinh kết hợp mật khẩu; hỗ trợ đăng nhập qua Google OAuth.
+- Quản lý phiên làm việc bằng JWT access token ngắn hạn và refresh token opaque lưu tại DB, hỗ trợ rotation và revocation.
+- Phân quyền dựa trên role và permission (RBAC) cho từng endpoint, kiểm tra tại backend.
+- Quản lý vòng đời tài khoản: đăng ký, xác minh email, khóa tài khoản, mở khóa, xóa mềm.
+- Bảo mật mật khẩu: áp dụng policy mật khẩu, đổi mật khẩu, quên/reset mật khẩu, thu hồi phiên sau đổi mật khẩu.
+- Quản trị user phía admin: tạo, sửa, khóa/mở khóa tài khoản với audit log đầy đủ.
+
+---
+
+## 2. Phạm vi chức năng
+
+| STT | Chức năng | Mô tả ngắn |
 |---|---|---|
-| Guest (unauthenticated) | Access public content, register, request password reset | Can access public APIs only |
-| Student (authenticated) | Access enrolled courses, attempt exams, purchase products, manage profile | Needs valid access token |
-| Teacher | Create/manage course content for own classrooms, view students progress | Scoped permissions for content and grading |
-| Admin / Operator | Manage users, roles, site configuration, financial operations | Elevated permissions; audit required |
-| Support / Finance | View orders/payments and perform refunds within scope | Restricted by permission sets |
+| 1 | Đăng nhập bằng credential | Email / số điện thoại / mã học sinh + mật khẩu |
+| 2 | Đăng nhập Google OAuth | Xác thực qua Google, tạo hoặc liên kết tài khoản |
+| 3 | Đăng ký tài khoản | Tạo tài khoản mới, gửi email xác minh |
+| 4 | Xác minh email | Kích hoạt tài khoản qua link email |
+| 5 | Đăng xuất | Thu hồi refresh token, kết thúc phiên |
+| 6 | Refresh token | Cấp lại access token, xoay vòng refresh token |
+| 7 | Quên mật khẩu | Gửi link/token đặt lại mật khẩu qua email |
+| 8 | Đặt lại mật khẩu | Đặt mật khẩu mới bằng reset token |
+| 9 | Đổi mật khẩu | Đổi mật khẩu khi đã đăng nhập |
+| 10 | Xem hồ sơ cá nhân | Lấy thông tin profile của user hiện tại |
+| 11 | Cập nhật hồ sơ | Chỉnh sửa thông tin cá nhân, avatar |
+| 12 | Quản lý user (admin) | CRUD user, phân role, khóa/mở khóa |
+| 13 | Quản lý role và permission | Định nghĩa và gán role, permission |
+| 14 | Middleware xác thực và phân quyền | Kiểm tra token và permission toàn hệ thống |
+| 15 | Audit log hành động admin | Ghi lại mọi hành động admin tác động đến tài khoản |
 
-Permissions model: Role-based with optional fine-grained permissions (Role + Permission). Rules and invariants reference `BR-AUTH-*` IDs in business-rules.md.
+---
 
-# 3. Feature list
+## 3. Ngoài phạm vi
+
+- Xác thực hai yếu tố (2FA/TOTP) — để dành phiên bản sau.
+- SSO doanh nghiệp (SAML, LDAP) — để dành phiên bản sau.
+- OAuth với Facebook, Apple — chỉ hỗ trợ Google trong phiên bản này.
+- Quản lý tổ chức / tenant đa cấp.
+- Billing và thanh toán liên quan tài khoản (thuộc module Order/Payment).
+- Phân quyền nội dung chi tiết từng resource (thuộc từng module nghiệp vụ riêng).
+
+---
+
+## 4. Actor
+
+| Actor | Mô tả | Quyền cơ bản |
+|---|---|---|
+| Guest | Người dùng chưa xác thực | Truy cập API công khai, đăng ký, đăng nhập, quên mật khẩu |
+| student | Học viên đã đăng nhập | Truy cập nội dung đã mua, làm bài kiểm tra, quản lý profile |
+| teacher | Giáo viên | Quản lý nội dung khóa học của mình, xem tiến độ học viên |
+| admin | Quản trị viên | Quản lý user, role, cấu hình hệ thống; mọi hành động cần audit log |
+| superAdmin | Quản trị cấp cao | Toàn quyền hệ thống, bao gồm quản lý admin khác |
+| financialAdmin | Quản trị tài chính | Xem và xử lý đơn hàng, thanh toán trong phạm vi được cấp |
+| supporter | Nhân viên hỗ trợ | Xem thông tin user để hỗ trợ, không sửa dữ liệu nghiệp vụ |
+
+---
+
+## 5. Permission
+
+| Mã permission | Mô tả | Role mặc định |
+|---|---|---|
+| `user:read` | Xem thông tin user bất kỳ | admin, superAdmin, supporter |
+| `user:create` | Tạo user mới thủ công | admin, superAdmin |
+| `user:update` | Cập nhật thông tin user bất kỳ | admin, superAdmin |
+| `user:delete` | Xóa mềm user | superAdmin |
+| `user:block` | Khóa/mở khóa tài khoản | admin, superAdmin |
+| `role:read` | Xem danh sách role và permission | admin, superAdmin |
+| `role:assign` | Gán role cho user | admin, superAdmin |
+| `role:manage` | Tạo/sửa/xóa role và permission | superAdmin |
+| `audit:read` | Xem audit log | admin, superAdmin |
+| `profile:read` | Xem profile của chính mình | Mọi user đã đăng nhập |
+| `profile:update` | Cập nhật profile của chính mình | Mọi user đã đăng nhập |
+
+---
+
+## 6. Danh sách chức năng
 
 | Mã chức năng | Tên chức năng | Actor | Màn hình đề xuất | API đề xuất | Dịch vụ nghiệp vụ cần có | Dữ liệu/model liên quan | Quy tắc áp dụng | Priority |
 |---|---|---|---|---|---|---|---|---|
-| AUTH-01 | Đăng nhập (credential) | Guest | `/login` | `POST /api/auth/login` | AuthService: validate credentials, issue tokens | User, RefreshToken | BR-AUTH-001, BR-AUTH-002 | Must |
-| AUTH-02 | Đăng ký tài khoản | Guest | `/signup` | `POST /api/auth/register` | RegistrationService: create user, trigger email verification | User | BR-AUTH-003 | Must |
-| AUTH-03 | Đăng xuất / Revoke refresh | Authenticated | n/a | `POST /api/auth/logout` | SessionService: revoke refresh token | RefreshToken, Session | BR-AUTH-004 | Must |
-| AUTH-04 | Refresh token | Authenticated | n/a | `POST /api/auth/refresh` | TokenService: rotate refresh token, issue new access token | RefreshToken | BR-AUTH-005 | Must |
-| AUTH-05 | Quên mật khẩu / Reset | Guest | `/forgot-password` | `POST /api/auth/forgot-password` / `POST /api/auth/reset-password` | PasswordService: create reset token, validate and update password | PasswordResetToken | BR-AUTH-006 | Must |
-| AUTH-06 | Profile read/update | Authenticated | `/profile` | `GET /api/users/me` / `PUT /api/users/me` | UserService: validate updates, unique checks | User | BR-AUTH-007 | Should |
-| AUTH-07 | Admin user management | Admin | `/admin/users` | `GET/POST/PUT/DELETE /api/admin/users` | AdminUserService: user lifecycle management | User, Role, Permission | BR-AUTH-008 | Should |
-| AUTH-08 | Password policy & account lock | System | n/a | n/a (applied by services) | SecurityService: enforce policy, lockout, unlock | User, AuditLog | BR-AUTH-009 | Must |
+| AUTH-01 | Đăng nhập bằng credential | Guest | `/login`, `/admin/login` | `POST /api/auth/login` | Xác thực thông tin đăng nhập, kiểm tra trạng thái tài khoản, phát hành access token và refresh token | User, RefreshToken | BR-AUTH-001, BR-AUTH-002 | Must |
+| AUTH-02 | Đăng nhập Google OAuth | Guest | `/login` | `POST /api/auth/google` | Xác thực Google ID token, tạo hoặc liên kết tài khoản, phát hành token | User, RefreshToken | BR-AUTH-001 | Should |
+| AUTH-03 | Đăng ký tài khoản | Guest | `/signup` | `POST /api/auth/register` | Kiểm tra dữ liệu đầu vào, tạo user với trạng thái pending_verify, gửi email xác minh | User | BR-AUTH-003 | Must |
+| AUTH-04 | Xác minh email | Guest | `/verify-email` | `GET /api/auth/verify-email` | Xác thực token xác minh, cập nhật trạng thái tài khoản sang active | User | BR-AUTH-003 | Must |
+| AUTH-05 | Đăng xuất | Authenticated | n/a | `POST /api/auth/logout` | Thu hồi refresh token, kết thúc phiên làm việc | RefreshToken | BR-AUTH-004 | Must |
+| AUTH-06 | Refresh token | Authenticated | n/a | `POST /api/auth/refresh` | Xác thực refresh token, phát hành access token mới, xoay vòng refresh token | RefreshToken | BR-AUTH-005 | Must |
+| AUTH-07 | Quên mật khẩu | Guest | `/forgot-password` | `POST /api/auth/forgot-password` | Tạo reset token ngắn hạn, gửi email đặt lại mật khẩu | PasswordResetToken | BR-AUTH-006 | Must |
+| AUTH-08 | Đặt lại mật khẩu | Guest | `/reset-password` | `POST /api/auth/reset-password` | Xác thực reset token, cập nhật mật khẩu, thu hồi mọi phiên hiện có | User, PasswordResetToken, RefreshToken | BR-AUTH-006 | Must |
+| AUTH-09 | Đổi mật khẩu | Authenticated | `/profile/change-password` | `POST /api/auth/change-password` | Xác thực mật khẩu hiện tại, cập nhật mật khẩu mới, thu hồi phiên khác | User, RefreshToken | BR-AUTH-009 | Must |
+| AUTH-10 | Xem hồ sơ cá nhân | Authenticated | `/profile` | `GET /api/users/me` | Trả về thông tin profile của user hiện tại | User | BR-AUTH-002 | Must |
+| AUTH-11 | Cập nhật hồ sơ | Authenticated | `/profile/edit` | `PUT /api/users/me` | Cập nhật thông tin cá nhân, kiểm tra unique email/phone | User | BR-AUTH-007 | Must |
+| AUTH-12 | Danh sách user (admin) | admin, superAdmin | `/admin/users` | `GET /api/admin/users` | Lấy danh sách user có filter và phân trang | User | `user:read` | Should |
+| AUTH-13 | Tạo user (admin) | admin, superAdmin | `/admin/users/new` | `POST /api/admin/users` | Tạo user thủ công, gán role, ghi audit log | User, AuditLog | `user:create` | Should |
+| AUTH-14 | Sửa user (admin) | admin, superAdmin | `/admin/users/{id}/edit` | `PUT /api/admin/users/{id}` | Cập nhật thông tin user, ghi audit log | User, AuditLog | `user:update` | Should |
+| AUTH-15 | Khóa/mở khóa tài khoản | admin, superAdmin | `/admin/users/{id}` | `POST /api/admin/users/{id}/block` | Cập nhật trạng thái tài khoản, thu hồi phiên nếu khóa, ghi audit log | User, RefreshToken, AuditLog | `user:block` | Must |
+| AUTH-16 | Quản lý role | superAdmin | `/admin/roles` | CRUD `/api/admin/roles` | Tạo/sửa/xóa role, gán permission vào role | Role, Permission, RolePermission | `role:manage` | Should |
+| AUTH-17 | Gán role cho user | admin, superAdmin | `/admin/users/{id}` | `PUT /api/admin/users/{id}/roles` | Gán hoặc thu hồi role, ghi audit log | UserRole, AuditLog | `role:assign` | Should |
+| AUTH-18 | Xem audit log | admin, superAdmin | `/admin/audit-logs` | `GET /api/admin/audit-logs` | Lấy lịch sử hành động admin có filter và phân trang | AuditLog | `audit:read` | Should |
 
-# 4. Đặc tả chi tiết từng chức năng
+---
 
-## AUTH-01 Đăng nhập người dùng
-
-### Mục đích
-Cho phép người dùng đăng nhập bằng email, số điện thoại hoặc mã học sinh và lấy token để tiếp tục sử dụng các API cần xác thực.
-
-### Actor / quyền sử dụng
-- STUDENT trên web-ssstudy
-- ADMIN, TEACHER, MANAGER, SUPPORTER, ACCOUNTANT, EDITOR, SALE_MANAGER, SALE_STAFF, MEDIA, TRAINING_STAFF trên web-admin
-
-### Điều kiện trước
-- Người dùng có tài khoản tồn tại trong cơ sở dữ liệu User.
-- Tài khoản chưa bị xóa, chưa bị block, chưa ở trạng thái VERIFY-EMAIL.
-
-### Điểm khởi đầu
-- Route: /auth/signin
-- Màn hình: /auth/signin (web-ssstudy), /login (web-admin)
-- Button/action hoặc API trigger: submit form đăng nhập
-
-### Dữ liệu đầu vào
-
-| Trường dữ liệu | Kiểu dữ liệu | Bắt buộc | Validation | Nguồn dữ liệu | Ghi chú |
-|---|---|---|---|---|---|
-| email | string | Có | Chuyển về lowercase, dùng để tìm theo code/phone/email | Form đăng nhập | Trong AuthController.signin, field params.email |
-| password | string | Có | Mã hóa MD5 trước khi so sánh | Form đăng nhập | Mật khẩu được mã hóa trước khi lưu và so sánh |
-| site | string | Không | Nếu là admin thì giới hạn permissions | Frontend web-admin | Body có site: admin |
-
-### Luồng chính
-1. Người dùng → Frontend nhập email/phone/code và password.
-2. Frontend → API /auth/signin gửi payload gồm email và password, và site cho admin.
-3. API → Controller AuthController.signin.
-4. Controller → Service/UserModel kiểm tra tài khoản theo điều kiện $or trên code/phone/email và password đã mã hóa.
-5. Controller → UserService.generateNewToken tạo token mới.
-6. Response → Frontend nhận token và thông tin user.
-7. Frontend → lưu token vào cookie/localStorage và điều hướng vào trang phù hợp.
-
-### Luồng thay thế / ngoại lệ
-- Nếu không tìm thấy user phù hợp, trả lỗi LOGIN_INFO_ERROR.
-- Nếu tài khoản bị BLOCKED/DEACTIVE/BLOCKED_ON_VIDEO, trả lỗi tài khoản vô hiệu.
-- Nếu tài khoản ở trạng thái VERIFY-EMAIL, trả lỗi chưa xác minh email.
-- Nếu role không nằm trong permissions phù hợp với site, trả lỗi không có quyền truy cập.
-
-### Validation và business rule
-- Frontend validation: web-ssstudy dùng yup để kiểm tra email/phone/code và bắt buộc password.
-- Backend validation: tìm kiếm user theo code/phone/email; so sánh password đã mã hóa; kiểm tra status và permission.
-- Điều kiện nghiệp vụ: user_group phải nằm trong whitelist permissions theo site.
-- Trạng thái/flag/enum ảnh hưởng xử lý: user.status, user.user_group.
-- Thông báo lỗi nếu xác định được: "Tài khoản của bạn không có quyền truy cập", "Tài khoản của bạn chưa được xác minh email", "Tài khoản của bạn đã bị vô hiệu".
-
-## API đề xuất
-
-| Mã API | Method | Endpoint đề xuất | Mục đích | Auth required | Permission | Request chính | Response chính | Business rule | Ghi chú |
-|---|---:|---|---|---:|---|---|---|---|---|
-| API-AUTH-001 | POST | `/api/auth/login` | Đăng nhập bằng email/phone + password | No | No | { identifier, password } | { accessToken, expiresIn, refreshToken, user } | BR-AUTH-001 | Access token short-lived (~15m) |
-| API-AUTH-002 | POST | `/api/auth/refresh` | Lấy access token mới bằng refresh token | Yes (refresh token) | No | { refreshToken } | { accessToken, refreshToken } | BR-AUTH-005 | Rotate refresh tokens |
-| API-AUTH-003 | POST | `/api/auth/logout` | Thu hồi refresh token | Yes | No | { refreshToken } | { ok: true } | BR-AUTH-004 | Idempotent revoke |
-| API-AUTH-004 | POST | `/api/auth/register` | Tạo user mới và gửi verify email | No | No | { fullname, email, phone?, password } | { userId, next: 'verify-email' } | BR-AUTH-003 | Email verification optional/configurable |
-| API-AUTH-005 | POST | `/api/auth/forgot-password` | Tạo reset token and send email | No | No | { email } | { ok: true } | BR-AUTH-006 | Token expiry short (e.g., 1h) |
-| API-AUTH-006 | POST | `/api/auth/reset-password` | Reset password using token | No | No | { token, newPassword } | { ok: true } | BR-AUTH-006 | Invalidate existing sessions on reset |
-| API-AUTH-007 | GET | `/api/users/me` | Lấy profile người dùng hiện tại | Yes | No | - | { user } | BR-AUTH-007 | Projection excludes sensitive fields |
-| API-AUTH-008 | PUT | `/api/users/me` | Cập nhật profile | Yes | No | { fullname, phone, ... } | { user } | BR-AUTH-007 | Unique phone/email checks |
-| API-AUTH-009 | GET | `/api/admin/users` | Danh sách user (admin) | Yes | `user:read` | { page, q } | { items, total } | BR-AUTH-008 | Audit log for admin actions |
-
-Notes:
-- All auth endpoints should follow a consistent error contract defined in CLAUDE.md.
-- Tokens: use JWT for accessToken and stored opaque refreshToken with rotation and revocation list.
-
-## Thiết kế dữ liệu / Domain model đề xuất
+## 7. Thiết kế dữ liệu / Domain model đề xuất
 
 ### Model chính
 
-| Model | Mục đích | Field quan trọng | Quan hệ | Ghi chú |
+| Model | Mục đích | Field quan trọng | Quan hệ |
+|---|---|---|---|
+| User | Tài khoản người dùng | id, email, phone, studentCode, passwordHash, status, avatarUrl | Có nhiều RefreshToken, có nhiều UserRole |
+| Role | Vai trò trong hệ thống | id, code, name, description | Có nhiều UserRole, có nhiều RolePermission |
+| Permission | Quyền truy cập cụ thể | id, code, description | Có nhiều RolePermission |
+| UserRole | Bảng trung gian user-role | userId, roleId | FK tới User và Role |
+| RolePermission | Bảng trung gian role-permission | roleId, permissionId | FK tới Role và Permission |
+| RefreshToken | Phiên làm việc | id, token, userId, expiresAt, revokedAt | FK tới User |
+| PasswordResetToken | Token đặt lại mật khẩu | id, token, userId, expiresAt, usedAt | FK tới User |
+| AuditLog | Lịch sử hành động admin | id, actorId, action, targetType, targetId, payload, createdAt | FK tới User (actor) |
+
+### Field chi tiết
+
+#### Model: User
+| Field | Kiểu dữ liệu | Bắt buộc | Ý nghĩa | Validation |
 |---|---|---|---|---|
-| User | Đại diện người dùng | id, email, phone, passwordHash, fullname, status, roles | roles -> Role | status: ACTIVE, PENDING_VERIFY, LOCKED, SUSPENDED |
-| Role | Tập hợp quyền | id, name, permissions[] | many-to-many với User | Role-based access control |
-| Permission | Quyền chi tiết | id, name, description | liên kết Role | Quy tắc kèm BR ids |
-| RefreshToken | Quản lý phiên | id, userId, token, issuedAt, expiresAt, revoked | belongsTo User | Store hashed token or use opaque id |
-| PasswordResetToken | Reset flow | token, userId, expiresAt, used | belongsTo User | Single-use, short expiry |
+| id | UUID | Có | Khóa chính | Auto-generate |
+| fullname | varchar(255) | Có | Họ và tên | Không rỗng, tối đa 255 ký tự |
+| email | varchar(255) | Có | Địa chỉ email | Format email hợp lệ, unique |
+| phone | varchar(20) | Không | Số điện thoại | Unique nếu có giá trị |
+| studentCode | varchar(50) | Không | Mã học sinh | Unique nếu có giá trị |
+| passwordHash | varchar(255) | Có | Mật khẩu đã hash (bcrypt) | Không lưu plain text |
+| status | enum | Có | Trạng thái tài khoản | active, inactive, blocked, pending_verify |
+| avatarUrl | varchar(500) | Không | URL ảnh đại diện | URL hợp lệ |
+| googleId | varchar(255) | Không | Google OAuth ID | Unique nếu có giá trị |
+| lastLoginAt | timestamp | Không | Thời điểm đăng nhập gần nhất | |
+| createdAt | timestamp | Có | Thời điểm tạo | Auto |
+| updatedAt | timestamp | Có | Thời điểm cập nhật gần nhất | Auto |
 
-### Field ví dụ: User
+#### Model: RefreshToken
+| Field | Kiểu dữ liệu | Bắt buộc | Ý nghĩa | Validation |
+|---|---|---|---|---|
+| id | UUID | Có | Khóa chính | Auto-generate |
+| token | varchar(500) | Có | Chuỗi opaque ngẫu nhiên | Unique, không đoán được |
+| userId | UUID FK | Có | Chủ sở hữu phiên | |
+| expiresAt | timestamp | Có | Thời điểm hết hạn | Phải lớn hơn thời điểm tạo |
+| revokedAt | timestamp | Không | Thời điểm bị thu hồi | Null nếu còn hợp lệ |
+| createdAt | timestamp | Có | Thời điểm tạo | Auto |
 
-| Field | Kiểu dữ liệu đề xuất | Bắt buộc | Ý nghĩa | Validation | Ghi chú |
-|---|---|---|---|---|---|
-| id | UUID | Có | PK | - | - |
-| email | string | Có | Dùng để login/communication | email format, lowercase, unique | Optional phone-only registration supported |
-| phone | string | Không | Số điện thoại | normalized, unique if present | E.164 preferred |
-| passwordHash | string | Có | Hash mật khẩu | Argon2id/Bcrypt recommended | Never return in API |
-| fullname | string | Có | Tên hiển thị | trim | - |
-| status | enum | Có | Account lifecycle | one of ACTIVE,PENDING_VERIFY,LOCKED,SUSPENDED | - |
-| roles | array<Role> | Có | Role assignment | default: [STUDENT] | - |
+#### Model: PasswordResetToken
+| Field | Kiểu dữ liệu | Bắt buộc | Ý nghĩa | Validation |
+|---|---|---|---|---|
+| id | UUID | Có | Khóa chính | Auto-generate |
+| token | varchar(255) | Có | Token reset ngắn hạn | Unique, hash trước khi lưu |
+| userId | UUID FK | Có | User cần reset | |
+| expiresAt | timestamp | Có | Hết hạn sau 1 giờ | |
+| usedAt | timestamp | Không | Thời điểm đã sử dụng | Null nếu chưa dùng |
+| createdAt | timestamp | Có | Thời điểm tạo | Auto |
 
-### Index/constraint đề xuất
+#### Model: AuditLog
+| Field | Kiểu dữ liệu | Bắt buộc | Ý nghĩa | Validation |
+|---|---|---|---|---|
+| id | UUID | Có | Khóa chính | Auto-generate |
+| actorId | UUID FK | Có | Admin thực hiện hành động | |
+| action | varchar(100) | Có | Loại hành động | ví dụ: user.block, user.role.assign |
+| targetType | varchar(50) | Có | Loại đối tượng | user, role |
+| targetId | UUID | Có | ID đối tượng bị tác động | |
+| payload | jsonb | Không | Dữ liệu thay đổi (before/after) | |
+| createdAt | timestamp | Có | Thời điểm ghi log | Auto |
 
-| Model/Table | Index/Constraint | Mục đích |
+### Quan hệ dữ liệu
+
+- User `1—N` RefreshToken: một user có nhiều phiên làm việc đồng thời.
+- User `1—N` PasswordResetToken: có thể có nhiều token (chỉ token mới nhất còn hợp lệ).
+- User `N—N` Role qua bảng UserRole: một user có thể có nhiều role.
+- Role `N—N` Permission qua bảng RolePermission: một role có nhiều permission.
+- AuditLog `N—1` User: nhiều log thuộc một admin.
+
+### Index / Constraint đề xuất
+
+| Bảng | Index / Constraint | Mục đích |
 |---|---|---|
-| User(email) | unique | Fast lookup and prevent duplicates |
-| User(phone) | unique partial | If phone used, ensure uniqueness |
-| RefreshToken(token) | unique | Token revocation lookup |
+| User | UNIQUE(email) | Không trùng email |
+| User | UNIQUE(phone) WHERE phone IS NOT NULL | Không trùng phone |
+| User | UNIQUE(studentCode) WHERE studentCode IS NOT NULL | Không trùng mã học sinh |
+| User | UNIQUE(googleId) WHERE googleId IS NOT NULL | Không trùng Google account |
+| RefreshToken | UNIQUE(token) | Token duy nhất |
+| RefreshToken | INDEX(userId, expiresAt, revokedAt) | Tìm phiên hợp lệ của user |
+| PasswordResetToken | UNIQUE(token) | Token duy nhất |
+| PasswordResetToken | INDEX(userId, expiresAt) | Tìm token chưa hết hạn của user |
+| AuditLog | INDEX(actorId, createdAt) | Lọc log theo admin |
+| AuditLog | INDEX(targetType, targetId) | Lọc log theo đối tượng |
 
-## Thiết kế kiến trúc module
+---
+
+## 8. Thiết kế kiến trúc module
 
 ### Thành phần cần có
 
 | Thành phần | Vai trò | Ghi chú triển khai |
 |---|---|---|
-| API layer | Expose auth endpoints and validate requests | Minimal logic; delegate to application services |
-| Application service | Orchestrate use cases (register, login, refresh) | Transaction boundaries and retries |
-| Domain service | Password policy, token policy, account lockout | Pure domain logic, testable |
-| Repository | Abstract DB access for User/Token | Allow swapping DB implementations |
-| Token provider | Issue/verify tokens | Use secure signing and rotation policy |
-| Email/Notification adapter | Send verification and reset emails | Queue/send asynchronously |
+| API layer (Controller) | Nhận request, validate đầu vào, gọi service, trả response | Không chứa business logic |
+| AuthService | Orchestrate luồng đăng nhập, đăng ký, refresh token, đăng xuất | Gọi TokenService, PasswordService, UserRepository |
+| UserService | Quản lý vòng đời tài khoản, profile, khóa/mở khóa | Gọi UserRepository, AuditLogger |
+| TokenService | Phát hành JWT access token, quản lý refresh token (rotation, revocation) | Dùng JWT library; lưu refresh token vào DB |
+| PasswordService | Hash mật khẩu, kiểm tra policy, tạo/xác thực reset token | Dùng bcrypt; token reset phải hash trước khi lưu |
+| GoogleOAuthService | Xác thực Google ID token, liên kết hoặc tạo tài khoản | Gọi Google API; không tin dữ liệu từ client |
+| PermissionService | Kiểm tra user có permission cụ thể không, load permissions từ role | Cache permissions nếu cần hiệu năng |
+| AuthMiddleware | Middleware toàn hệ thống: kiểm tra JWT, gắn user vào request context | Từ chối request khi token không hợp lệ |
+| UserRepository | Truy vấn và cập nhật User trong DB | Không chứa business logic |
+| TokenRepository | Truy vấn, tạo, thu hồi RefreshToken và PasswordResetToken | |
+| AuditLogger | Ghi AuditLog cho hành động admin | Gọi async, không block request |
+| EmailService | Gửi email xác minh và email reset mật khẩu | Adapter gọi SMTP/SES; retry khi thất bại |
+| Validator | Validate request body theo schema | Dùng Zod / Joi / class-validator |
 
 ### Dependency
-- Depends on: Email service, Secrets manager, Observability (logging/metrics).
-- Other modules may depend on Authentication (all protected routes).
+
+- Module Authentication không phụ thuộc bất kỳ module nghiệp vụ nào khác.
+- Mọi module khác phụ thuộc Authentication để kiểm tra token và permission.
+- Module khác gọi `PermissionService` hoặc `AuthMiddleware` để xác thực; không tự tái triển khai logic auth.
 
 ### Nguyên tắc triển khai
-- Do not embed business rules in HTTP handlers; keep handlers thin.
-- Enforce validation at API boundary and domain invariants in services.
-- Store refresh tokens server-side or use revocation strategy.
-- Audit important actions (login failure, password reset, admin updates).
-
-## Yêu cầu giao diện (UI)
-
-| Màn hình | Route đề xuất | Actor | Mục đích | Thành phần chính | Action chính | API sử dụng | Permission | Ghi chú |
-|---|---|---|---|---|---|---|---|---|
-| Đăng nhập | /login | Guest | Cho phép login | Form identifier/password, 2FA prompt | Submit login | POST /api/auth/login | None | Support remember-me optional |
-| Đăng ký | /signup | Guest | Tạo tài khoản | Form signup | Submit register | POST /api/auth/register | None | Email verification optional/configurable |
-| Quên mật khẩu | /forgot-password | Guest | Khởi tạo reset | Form email | Submit | POST /api/auth/forgot-password | None | Rate limit requests |
-| Profile | /profile | Authenticated | Xem và sửa profile | Profile form, avatar upload | Save | GET/PUT /api/users/me | Authenticated | Validate unique phone/email |
-| Admin: User list | /admin/users | Admin | Quản lý người dùng | Table, filters, actions | Ban/unban | GET /api/admin/users | user:read | Audit actions |
-
-## Use cases (example)
-
-### UC-AUTH-001 — User login with credentials
-- Mục tiêu: Người dùng đăng nhập và nhận access token.
-- Actor chính: Guest
-- Điều kiện trước: Người dùng đã đăng ký; account status = ACTIVE
-- Trigger: Submit login form
-- Luồng chính: 1) Validate input 2) Validate credentials 3) Issue access & refresh tokens 4) Return profile
-- Luồng lỗi: Invalid credentials -> return error; locked account -> specific error
-- Business rules: BR-AUTH-001 (password check), BR-AUTH-009 (lockout)
-- Permission: none
-- Acceptance criteria: valid credentials return tokens; invalid credentials return standardized error
-
-### UC-AUTH-002 — Refresh access token
-- Mục tiêu: Thay mới access token bằng refresh token
-- Actor chính: Authenticated (has refresh token)
-- Trigger: Client calls /api/auth/refresh
-- Luồng chính: validate refresh token, rotate and return new tokens
-- Acceptance criteria: old refresh invalidated, new tokens issued
-
-## User stories (examples)
-
-### US-AUTH-001 — Login
-- Với vai trò: Guest
-- Tôi muốn: đăng nhập bằng email/phone và mật khẩu
-- Để: truy cập các tính năng yêu cầu đăng nhập
-- Priority: Must
-- Given: tài khoản tồn tại và active
-- When: tôi gửi credential hợp lệ
-- Then: nhận access token và profile
-- UI note: show error on invalid login
-- API note: POST /api/auth/login
-
-### US-AUTH-002 — Register and verify email
-- Với vai trò: Guest
-- Tôi muốn: đăng ký tài khoản và nhận email xác thực
-- Để: kích hoạt account trước khi sử dụng tính năng protected
-- Priority: Must
-
-### US-AUTH-003 — Forgot password
-- Với vai trò: Guest
-- Tôi muốn: yêu cầu reset password qua email
-- Để: lấy lại truy cập khi quên mật khẩu
-- Priority: Must
-
-## Test / UAT scenarios (high level)
-- Successful login with valid credential returns access token.
-- Refresh token rotation invalidates previous refresh.
-- Password reset flow: request -> receive token -> reset -> old sessions invalidated.
-
-## Migration / Notes
-- If migrating from legacy system, map existing users into `User` model and issue forced password reset if hash algorithm incompatible. Record migration notes in `docs/legacy-notes.md` (optional).
-
-
-### Màn hình liên quan
-
-| Tên màn hình | Route | Component/Page | Field hiển thị | Action/Button | API gọi | Điều kiện hiển thị | Role/Permission |
-|---|---|---|---|---|---|---|---|
-| Đăng nhập người dùng | /auth/signin | [web-ssstudy/src/app/auth/signin/page.tsx](../../../../web-ssstudy/src/app/auth/signin/page.tsx) | emailOrPhone, password | Submit | /auth/signin | Chỉ hiện khi chưa đăng nhập | Public |
-| Đăng nhập admin | /login | [web-admin/src/components/Master.js](../../../../web-admin/src/components/Master.js) | email/phone/password | Submit | /auth/signin | Chỉ hiện khi chưa authenticated | Public/role-based |
-
-### Dữ liệu và trạng thái
-- Entity/table/model liên quan: User
-- Quan hệ dữ liệu: User có user_group và status để quyết định login.
-- Trạng thái/enum/flag: status ACTIVE/VERIFY-EMAIL/BLOCKED/DEACTIVE/BLOCKED_ON_VIDEO; user_group theo appConfig.USER_GROUP.
-- Điều kiện tạo/sửa/xóa/khóa/phê duyệt: không áp dụng trực tiếp trong login.
-
-### Quy tắc phân quyền
-- Backend phân quyền theo site và user_group.
-- Truy cập admin chỉ được cấp cho danh sách permissions được định nghĩa trong AuthController.signin.
-
-### Logging/audit nếu có
-- Không thấy logging riêng cho login trong file hiện tại; có middleware logging global ở router.
 
-### Bằng chứng từ source
-- [api-develop/app/controllers/AuthController.js](../../../../api-develop/app/controllers/AuthController.js)
-- [api-develop/app/routes/routes.js](../../../../api-develop/app/routes/routes.js)
-- [web-ssstudy/src/app/auth/signin/page.tsx](../../../../web-ssstudy/src/app/auth/signin/page.tsx)
-- [web-admin/src/redux/auth/action.js](../../../../web-admin/src/redux/auth/action.js)
-
-### [Open question / verify]
-
-### Quy tắc phân quyền
-- Không có role check riêng; chỉ cần tồn tại user active.
-
-### Logging/audit nếu có
-- Không thấy logging riêng; có middleware logging global.
-
-### Bằng chứng từ source
-- [api-develop/app/controllers/UserController.js](../../../../api-develop/app/controllers/UserController.js)
-- [api-develop/app/routes/routes.js](../../../../api-develop/app/routes/routes.js)
-
-### [Open question / verify]
-- Chưa thấy frontend admin hoặc web-ssstudy route forgot password có component rõ ràng trong thư mục được đọc, nhưng route đã được liệt kê trong route inventory.
-
-## AUTH-05 Xem thông tin hồ sơ
-
-### Mục đích
-Trả về thông tin hồ sơ đang đăng nhập dựa trên token.
-
-### Actor / quyền sử dụng
-- Người dùng đã đăng nhập
-
-### Điều kiện trước
-- Token hợp lệ và middleware CheckToken đã xác minh.
-
-### Điểm khởi đầu
-- Route: /user/profile
-- Màn hình: /profile
-- Button/action hoặc API trigger: load profile khi vào trang profile
-
-### Dữ liệu đầu vào
-- Không có body phức tạp; dùng req.user.user_id từ token.
-
-### Luồng chính
-1. Frontend gọi /user/profile sau khi đã đăng nhập.
-2. Backend UserController.profile dùng req.user.user_id.
-3. Lấy User theo _id và trạng thái ACTIVE.
-4. Trả về thông tin profile.
-
-### Luồng thay thế / ngoại lệ
-- Nếu không tìm thấy user: trả lỗi USER_NOT_EXIST.
-- Nếu token không hợp lệ: middleware CheckToken trả 401 trước khi tới controller.
-
-### Validation và business rule
-- Chỉ user đang active mới được trả profile.
-- Profile không phải là full admin profile; controller chỉ projection một số field.
-
-### API liên quan
-
-| Endpoint | Method | Request DTO/params | Response | Controller | Service | Repository/Entity | Exception/lỗi có thể có |
-|---|---|---|---|---|---|---|---|
-| /user/profile | POST | {} | user profile | UserController.profile | N/A | User | Token invalid, user không tồn tại |
-
-### Màn hình liên quan
-
-| Tên màn hình | Route | Component/Page | Field hiển thị | Action/Button | API gọi | Điều kiện hiển thị | Role/Permission |
-|---|---|---|---|---|---|---|---|
-| Profile | /profile | [web-admin/src/components/Profile.js](../../../../web-admin/src/components/Profile.js) | fullname, email, phone, avatar | Load profile | /user/profile | Authenticated | Any authenticated user |
-
-### Dữ liệu và trạng thái
-- Entity/table/model liên quan: User
-
-### Quy tắc phân quyền
-- Cần token hợp lệ; CheckScope không áp dụng ở route này vì route không nằm trong scope checklist? Trong router, route này sẽ chạy check scope nếu không public.
-
-### Logging/audit nếu có
-- Không thấy logging riêng.
-
-### Bằng chứng từ source
-- [api-develop/app/controllers/UserController.js](../../../../api-develop/app/controllers/UserController.js)
-- [web-admin/src/redux/auth/action.js](../../../../web-admin/src/redux/auth/action.js)
-
-### [Open question / verify]
-- Web-ssstudy có route profile chưa được đọc sâu trong phạm vi này; logic profile trên user site chưa được chứng minh đầy đủ.
-
-## AUTH-06 Cập nhật hồ sơ
-
-### Mục đích
-Cho phép người dùng cập nhật thông tin cá nhân như fullname, phone, email, address, avatar.
-
-### Actor / quyền sử dụng
-- Người dùng đã đăng nhập
-
-### Điều kiện trước
-- Token hợp lệ.
-
-### Điểm khởi đầu
-- Route: /user/update-profile
-- Màn hình: /profile
-- Button/action hoặc API trigger: submit form cập nhật hồ sơ
-
-### Dữ liệu đầu vào
-
-| Trường dữ liệu | Kiểu dữ liệu | Bắt buộc | Validation | Nguồn dữ liệu | Ghi chú |
-|---|---|---|---|---|---|
-| fullname | string | Không | Không rỗng nếu truyền | Form profile | Update user.fullname |
-| phone | string | Không | Chuyển về format chuẩn và kiểm tra unique | Form profile | BaseHelper.getPhone |
-| email | string | Không | Kiểm tra unique | Form profile | Nếu trùng thì lỗi |
-| address/classroom/level/school/code/dob | optional | Không | Không thấy validation chuyên sâu | Form profile | Có thể update |
-| avatar_base64/files | file | Không | Upload qua UploadService | Form upload avatar | Có support upload file |
-
-### Luồng chính
-1. Frontend gửi thông tin profile cập nhật và possible file upload.
-2. Backend UserController.updateProfile đọc req.user.user_id.
-3. Kiểm tra uniqueness cho phone/email nếu có.
-4. Cập nhật dữ liệu vào User.
-5. Trả về thông tin user đã cập nhật.
-
-### Luồng thay thế / ngoại lệ
-- Phone/email đã tồn tại: trả lỗi.
-- User không tồn tại: trả lỗi USER_NOT_EXIST.
-
-### Validation và business rule
-- Email/phone phải unique nếu thay đổi.
-- Avatar có thể upload dưới dạng base64 hoặc files.
-
-### API liên quan
-
-| Endpoint | Method | Request DTO/params | Response | Controller | Service | Repository/Entity | Exception/lỗi có thể có |
-|---|---|---|---|---|---|---|---|
-| /user/update-profile | POST | { fullname, phone, email, ... , avatar_base64/files } | updated user | UserController.updateProfile | UploadService | User | Phone/email đã tồn tại |
-
-### Màn hình liên quan
-
-| Tên màn hình | Route | Component/Page | Field hiển thị | Action/Button | API gọi | Điều kiện hiển thị | Role/Permission |
-|---|---|---|---|---|---|---|---|
-| Profile | /profile | [web-admin/src/components/Profile.js](../../../../web-admin/src/components/Profile.js) | profile fields | Save | /user/update-profile | Authenticated | Any authenticated user |
-
-### Dữ liệu và trạng thái
-- Entity/table/model liên quan: User
-
-### Quy tắc phân quyền
-- Quyền được kiểm soát bằng token và scope, không có role riêng cho update profile.
-
-### Logging/audit nếu có
-- Không thấy logging riêng.
-
-### Bằng chứng từ source
-- [api-develop/app/controllers/UserController.js](../../../../api-develop/app/controllers/UserController.js)
-- [web-admin/src/redux/auth/action.js](../../../../web-admin/src/redux/auth/action.js)
-
-### [Open question / verify]
-- Chưa thấy form cập nhật hồ sơ trên web-ssstudy trong phạm vi đọc sâu hiện tại.
-
-## AUTH-07 Đổi mật khẩu
-
-### Mục đích
-Cho phép người dùng đổi mật khẩu nếu nhập đúng mật khẩu cũ và xác nhận mật khẩu mới.
-
-### Actor / quyền sử dụng
-- Người dùng đã đăng nhập
-
-### Điều kiện trước
-- Token hợp lệ.
-- Người dùng nhập mật khẩu cũ, mật khẩu mới, xác nhận đúng.
-
-### Điểm khởi đầu
-- Route: /user/change-password
-- Màn hình: /account/change-password (web-ssstudy), /changepassword (web-admin)
-- Button/action hoặc API trigger: submit đổi mật khẩu
-
-### Dữ liệu đầu vào
-
-| Trường dữ liệu | Kiểu dữ liệu | Bắt buộc | Validation | Nguồn dữ liệu | Ghi chú |
-|---|---|---|---|---|---|---|
-| password | string | Có | Mật khẩu cũ | Form đổi mật khẩu | So sánh với password hash hiện tại |
-| new_password | string | Có | BaseHelper.passwordValidate | Form đổi mật khẩu | Mật khẩu mới |
-| confirm | string | Có | Phải bằng new_password | Form đổi mật khẩu | Nên match |
-
-### Luồng chính
-1. Frontend gửi password cũ, new_password, confirm.
-2. Backend UserController.changePassword kiểm tra mật khẩu cũ và new password.
-3. Nếu hợp lệ, hash password mới và cập nhật vào User.
-4. Xóa key cũ và tạo token mới.
-5. Trả về token mới.
-
-### Luồng thay thế / ngoại lệ
-- Thiếu password cũ/mới/confirm: trả lỗi.
-- Mật khẩu cũ không chính xác: trả lỗi cụ thể.
-- Mật khẩu mới không hợp lệ: trả lỗi PASS_INVALID.
-- Mật khẩu confirm không đúng: trả lỗi xác nhận không chính xác.
-
-### Validation và business rule
-- Backend kiểm tra old password và new password bằng BaseHelper.passwordValidate.
-- Token mới được tạo sau khi đổi mật khẩu.
-
-### API liên quan
-
-| Endpoint | Method | Request DTO/params | Response | Controller | Service | Repository/Entity | Exception/lỗi có thể có |
-|---|---|---|---|---|---|---|---|
-| /user/change-password | POST | { password, new_password, confirm } | { token } | UserController.changePassword | UserService.generateNewToken | User | Mật khẩu cũ không chính xác, confirm không đúng |
-
-### Màn hình liên quan
-
-| Tên màn hình | Route | Component/Page | Field hiển thị | Action/Button | API gọi | Điều kiện hiển thị | Role/Permission |
-|---|---|---|---|---|---|---|---|
-| Đổi mật khẩu | /account/change-password | [web-ssstudy/src/app/account/change-password/page.tsx](../../../../web-ssstudy/src/app/account/change-password/page.tsx) | current password/new password/confirm | Submit | /user/change-password | Authenticated | Any authenticated user |
-| Đổi mật khẩu admin | /changepassword | [web-admin/src/components/Changepassword.js](../../../../web-admin/src/components/Changepassword.js) | current password/new password/confirm | Submit | /user/change-password | Authenticated | Any authenticated user |
-
-### Dữ liệu và trạng thái
-- Entity/table/model liên quan: User
-- Trạng thái/enum/flag: user.status và password hash.
-
-### Quy tắc phân quyền
-- Cần đăng nhập và token hợp lệ.
-
-### Logging/audit nếu có
-- Không thấy logging riêng.
-
-### Bằng chứng từ source
-- [api-develop/app/controllers/UserController.js](../../../../api-develop/app/controllers/UserController.js)
-- [web-admin/src/components/Changepassword.js](../../../../web-admin/src/components/Changepassword.js)
-
-### [Open question / verify]
-- Route /account/change-password trên web-ssstudy được liệt kê trong route inventory, nhưng file page cụ thể chưa được đọc sâu trong phạm vi này.
-
-## AUTH-08 Kiểm tra token và scope
-
-### Mục đích
-Bảo vệ các route cần đăng nhập và kiểm tra role/permission trước khi cho phép request đi tiếp.
-
-### Actor / quyền sử dụng
-- Middleware hệ thống
-
-### Điều kiện trước
-- Request tới route không nằm trong publicRoutes.
-
-### Điểm khởi đầu
-- Route: toàn bộ router chính trong [api-develop/app/routes/routes.js](../../../../api-develop/app/routes/routes.js)
-- Màn hình: không trực tiếp
-- Button/action hoặc API trigger: mọi request tới protected endpoint
-
-### Dữ liệu đầu vào
-
-| Trường dữ liệu | Kiểu dữ liệu | Bắt buộc | Validation | Nguồn dữ liệu | Ghi chú |
-|---|---|---|---|---|---|
-| authorization header | string | Có cho protected route | Phải bắt đầu bằng Bearer | Request header | Dùng để decode token |
-| originalUrl | string | Có | Chuyển thành controller/action để lookup scope | Request URL | Dùng trong CheckScope |
-
-### Luồng chính
-1. Request đi vào router middleware.
-2. Router kiểm tra URL có nằm trong publicRoutes không.
-3. Nếu không public, CheckToken.verify đọc token từ header Authorization.
-4. Nếu token hợp lệ, CheckScope.checkUserScope đọc role và scope tương ứng từ user_scopes.json.
-5. Nếu scope phù hợp, request được cho phép tiếp tục.
-6. Nếu token/scope không hợp lệ, trả 401/403.
-
-### Luồng thay thế / ngoại lệ
-- Không có Authorization header: 401.
-- Token không hợp lệ/expired: 401.
-- Scope không phù hợp: 403.
-
-### Validation và business rule
-- Scope được phân theo controller/action và role.
-- ADMIN có quyền true.
-- Các role khác dùng mapping từ user_scopes.json.
-
-### API liên quan
-- N/A; middleware toàn cục
-
-### Màn hình liên quan
-- Không trực tiếp
-
-### Dữ liệu và trạng thái
-- Entity/table/model liên quan: User, token payload
-
-### Quy tắc phân quyền
-- Quyền được xác định ở middleware, không ở UI.
-
-### Logging/audit nếu có
-- Có middleware LoggingMiddleware.
-
-### Bằng chứng từ source
-- [api-develop/app/routes/routes.js](../../../../api-develop/app/routes/routes.js)
-- [api-develop/app/routes/CheckToken.js](../../../../api-develop/app/routes/CheckToken.js)
-- [api-develop/app/routes/CheckScope.js](../../../../api-develop/app/routes/CheckScope.js)
-- [api-develop/config/user_scopes.json](../../../../api-develop/config/user_scopes.json)
-
-### [Open question / verify]
-- Không thấy mapping scope cho STUDENT và các role phụ trợ ở đầu file user_scopes.json trong phạm vi đọc được.
-
-### [Risk / technical note]
-- CheckScope dựa vào controller/action từ URL và có nhiều route/URL không rõ ràng; việc này có thể dẫn tới false positive/false negative khi route đổi tên hoặc cấu trúc URL thay đổi.
-
-# 5. Sơ đồ luồng
-
-```mermaid
-sequenceDiagram
-    participant User as Người dùng
-    participant FE as Frontend
-    participant API as Backend
-    participant DB as User Model
-
-    User->>FE: Nhập thông tin đăng nhập/đăng ký
-    FE->>API: POST /auth/signin hoặc /auth/signup
-    API->>DB: Tìm user bằng email/phone/code và password hash
-    DB-->>API: User data
-    API->>API: Tạo token, kiểm tra role/scope
-    API-->>FE: Token + user info
-    FE-->>User: Hiển thị trạng thái đăng nhập và điều hướng
+- API layer không chứa business rule. Mọi quyết định nghiệp vụ nằm trong service.
+- Permission phải kiểm tra tại backend, không chỉ ở frontend guard.
+- Validation request cần có ở cả request schema (input shape) và domain validation (business rule).
+- Mật khẩu phải được hash bằng bcrypt với cost factor đủ mạnh trước khi lưu DB.
+- Token reset mật khẩu phải hash trước khi lưu DB; chỉ gửi token gốc qua email.
+- Audit log ghi bất đồng bộ, không được làm chậm response.
+- Khi khóa tài khoản, phải thu hồi (revoke) toàn bộ refresh token hiện có của user đó.
+
+---
+
+## 9. Yêu cầu giao diện
+
+| Màn hình | Route đề xuất | Actor | Mục đích | API sử dụng |
+|---|---|---|---|---|
+| Đăng nhập người học | `/login` | Guest | Đăng nhập vào trang học | `POST /api/auth/login` |
+| Đăng nhập quản trị | `/admin/login` | Guest | Đăng nhập vào trang admin | `POST /api/auth/login` |
+| Đăng ký | `/signup` | Guest | Tạo tài khoản mới | `POST /api/auth/register` |
+| Xác minh email | `/verify-email` | Guest | Kích hoạt tài khoản qua link | `GET /api/auth/verify-email` |
+| Quên mật khẩu | `/forgot-password` | Guest | Yêu cầu gửi email reset | `POST /api/auth/forgot-password` |
+| Đặt lại mật khẩu | `/reset-password` | Guest | Nhập mật khẩu mới từ link email | `POST /api/auth/reset-password` |
+| Hồ sơ cá nhân | `/profile` | Authenticated | Xem thông tin tài khoản | `GET /api/users/me` |
+| Chỉnh sửa hồ sơ | `/profile/edit` | Authenticated | Cập nhật thông tin cá nhân | `PUT /api/users/me` |
+| Đổi mật khẩu | `/profile/change-password` | Authenticated | Đổi mật khẩu khi đã đăng nhập | `POST /api/auth/change-password` |
+| Quản lý user (admin) | `/admin/users` | admin, superAdmin | Danh sách và quản lý user | `GET /api/admin/users` |
+| Chi tiết user (admin) | `/admin/users/{id}` | admin, superAdmin | Xem, sửa, khóa/mở khóa user | `GET/PUT /api/admin/users/{id}` |
+| Quản lý role (admin) | `/admin/roles` | superAdmin | Tạo/sửa role và gán permission | CRUD `/api/admin/roles` |
+| Audit log (admin) | `/admin/audit-logs` | admin, superAdmin | Xem lịch sử hành động admin | `GET /api/admin/audit-logs` |
+
+**Yêu cầu UI chi tiết:**
+- Form đăng nhập: ô nhập email/phone/mã học sinh, mật khẩu, nút đăng nhập và link "Quên mật khẩu".
+- Form đăng ký: họ tên, email, số điện thoại, mật khẩu, xác nhận mật khẩu; hiển thị yêu cầu mật khẩu theo policy.
+- Sau đăng ký thành công: thông báo yêu cầu xác minh email, không cho phép đăng nhập khi chưa xác minh.
+- Trang admin users: bảng danh sách có lọc theo trạng thái, role, từ khóa; nút khóa/mở khóa inline.
+- Trang audit log: bảng theo thời gian, lọc theo admin và loại hành động.
+
+---
+
+## 10. API đề xuất
+
+| Mã API | Method | Endpoint đề xuất | Mục đích | Auth required | Permission | Request chính | Response chính | Business rule | Ghi chú |
+|---|---|---|---|---|---|---|---|---|---|
+| API-AUTH-001 | POST | `/api/auth/login` | Đăng nhập bằng credential | Không | Không | `{ identifier, password, site? }` | `{ accessToken, expiresIn, refreshToken, user }` | BR-AUTH-001, BR-AUTH-002 | identifier: email hoặc phone hoặc mã học sinh |
+| API-AUTH-002 | POST | `/api/auth/google` | Đăng nhập qua Google OAuth | Không | Không | `{ idToken }` | `{ accessToken, expiresIn, refreshToken, user }` | BR-AUTH-001 | Xác thực idToken phía backend |
+| API-AUTH-003 | POST | `/api/auth/register` | Đăng ký tài khoản mới | Không | Không | `{ fullname, email, phone?, password }` | `{ userId, message }` | BR-AUTH-003 | Gửi email xác minh sau khi tạo |
+| API-AUTH-004 | GET | `/api/auth/verify-email` | Xác minh email từ link | Không | Không | `?token=...` | `{ message }` | BR-AUTH-003 | Token trong query string |
+| API-AUTH-005 | POST | `/api/auth/logout` | Đăng xuất, thu hồi refresh token | Có | Không | `{ refreshToken }` | `{ ok: true }` | BR-AUTH-004 | Idempotent; không lỗi nếu token đã thu hồi |
+| API-AUTH-006 | POST | `/api/auth/refresh` | Lấy access token mới | Không | Không | `{ refreshToken }` | `{ accessToken, expiresIn, refreshToken }` | BR-AUTH-005 | Xoay vòng refresh token; thu hồi token cũ |
+| API-AUTH-007 | POST | `/api/auth/forgot-password` | Gửi email đặt lại mật khẩu | Không | Không | `{ email }` | `{ message }` | BR-AUTH-006 | Luôn trả thành công dù email không tồn tại (chống enum) |
+| API-AUTH-008 | POST | `/api/auth/reset-password` | Đặt mật khẩu mới bằng reset token | Không | Không | `{ token, newPassword }` | `{ ok: true }` | BR-AUTH-006 | Thu hồi mọi phiên sau khi đặt lại |
+| API-AUTH-009 | POST | `/api/auth/change-password` | Đổi mật khẩu khi đã đăng nhập | Có | Không | `{ currentPassword, newPassword }` | `{ ok: true }` | BR-AUTH-009 | Thu hồi phiên khác; giữ phiên hiện tại |
+| API-AUTH-010 | GET | `/api/users/me` | Lấy profile người dùng hiện tại | Có | `profile:read` | — | `{ user }` | BR-AUTH-002 | Không trả passwordHash |
+| API-AUTH-011 | PUT | `/api/users/me` | Cập nhật profile | Có | `profile:update` | `{ fullname, phone?, avatarUrl? }` | `{ user }` | BR-AUTH-007 | Kiểm tra unique phone |
+| API-AUTH-012 | GET | `/api/admin/users` | Danh sách user (admin) | Có | `user:read` | `?page, limit, q, status, role` | `{ items, total }` | BR-AUTH-008 | Phân trang, lọc theo nhiều tiêu chí |
+| API-AUTH-013 | POST | `/api/admin/users` | Tạo user thủ công (admin) | Có | `user:create` | `{ fullname, email, phone?, password, roleIds }` | `{ user }` | BR-AUTH-008 | Ghi audit log |
+| API-AUTH-014 | PUT | `/api/admin/users/{id}` | Cập nhật user (admin) | Có | `user:update` | `{ fullname, phone?, status? }` | `{ user }` | BR-AUTH-008 | Ghi audit log |
+| API-AUTH-015 | POST | `/api/admin/users/{id}/block` | Khóa tài khoản | Có | `user:block` | `{ reason? }` | `{ ok: true }` | BR-AUTH-009 | Thu hồi phiên; ghi audit log |
+| API-AUTH-016 | POST | `/api/admin/users/{id}/unblock` | Mở khóa tài khoản | Có | `user:block` | `{ reason? }` | `{ ok: true }` | BR-AUTH-009 | Ghi audit log |
+| API-AUTH-017 | PUT | `/api/admin/users/{id}/roles` | Gán role cho user | Có | `role:assign` | `{ roleIds: [] }` | `{ ok: true }` | BR-AUTH-008 | Ghi audit log; ghi đè toàn bộ role |
+| API-AUTH-018 | GET | `/api/admin/roles` | Danh sách role và permission | Có | `role:read` | — | `{ roles }` | — | |
+| API-AUTH-019 | POST | `/api/admin/roles` | Tạo role mới | Có | `role:manage` | `{ code, name, permissionIds }` | `{ role }` | — | Chỉ superAdmin |
+| API-AUTH-020 | GET | `/api/admin/audit-logs` | Xem audit log | Có | `audit:read` | `?page, limit, actorId, action, from, to` | `{ items, total }` | — | Phân trang theo thời gian |
+
+---
+
+## 11. Use case nghiệp vụ
+
+### UC-AUTH-001 — Đăng nhập bằng credential
+
+- **Mục tiêu**: Cho phép người dùng đăng nhập và nhận token để truy cập các tính năng cần xác thực.
+- **Actor chính**: Guest (học viên, admin, giáo viên).
+- **Actor phụ**: Không có.
+- **Điều kiện trước**: Người dùng có tài khoản tồn tại trong hệ thống.
+- **Trigger**: Người dùng gửi form đăng nhập.
+- **Luồng chính**:
+  1. Người dùng nhập identifier (email/phone/mã học sinh) và mật khẩu.
+  2. Hệ thống tìm user theo identifier.
+  3. Hệ thống kiểm tra mật khẩu bằng bcrypt.
+  4. Hệ thống kiểm tra trạng thái tài khoản (phải là `active`).
+  5. Hệ thống tạo JWT access token và refresh token mới.
+  6. Hệ thống lưu refresh token vào DB.
+  7. Trả về access token, refresh token và thông tin user cơ bản.
+- **Luồng thay thế**:
+  - Đăng nhập với `site=admin`: kiểm tra thêm điều kiện user có role admin.
+- **Luồng lỗi**:
+  - Không tìm thấy user hoặc mật khẩu sai: trả lỗi 401 với mã `INVALID_CREDENTIALS`.
+  - Tài khoản bị khóa (`blocked`): trả lỗi 403 với mã `ACCOUNT_BLOCKED`.
+  - Tài khoản chờ xác minh (`pending_verify`): trả lỗi 403 với mã `EMAIL_NOT_VERIFIED`.
+  - Tài khoản không có quyền đăng nhập admin: trả lỗi 403 với mã `INSUFFICIENT_ROLE`.
+- **Dữ liệu đầu vào**: `identifier` (string), `password` (string), `site` (string, không bắt buộc).
+- **Dữ liệu đầu ra**: `accessToken`, `expiresIn`, `refreshToken`, `user` (id, fullname, email, role).
+- **Business rule áp dụng**: BR-AUTH-001, BR-AUTH-002.
+- **Acceptance criteria**:
+  - Đăng nhập thành công với thông tin hợp lệ và tài khoản active.
+  - Trả lỗi khi mật khẩu sai, tài khoản khóa hoặc chưa xác minh.
+  - Không trả passwordHash trong response.
+
+---
+
+### UC-AUTH-002 — Đăng ký tài khoản mới
+
+- **Mục tiêu**: Cho phép người dùng mới tạo tài khoản học viên.
+- **Actor chính**: Guest.
+- **Điều kiện trước**: Email và số điện thoại chưa tồn tại trong hệ thống.
+- **Trigger**: Người dùng gửi form đăng ký.
+- **Luồng chính**:
+  1. Người dùng nhập họ tên, email, số điện thoại (không bắt buộc), mật khẩu.
+  2. Hệ thống validate dữ liệu đầu vào (format, required fields).
+  3. Hệ thống kiểm tra email và phone chưa được dùng.
+  4. Hệ thống hash mật khẩu bằng bcrypt.
+  5. Hệ thống tạo user với trạng thái `pending_verify`.
+  6. Hệ thống tạo email verification token và gửi email.
+  7. Trả về thông báo yêu cầu xác minh email.
+- **Luồng lỗi**:
+  - Email đã tồn tại: trả lỗi 422 với mã `EMAIL_ALREADY_EXISTS`.
+  - Phone đã tồn tại: trả lỗi 422 với mã `PHONE_ALREADY_EXISTS`.
+  - Mật khẩu không đáp ứng policy: trả lỗi 422 với mã `PASSWORD_TOO_WEAK`.
+- **Business rule áp dụng**: BR-AUTH-003.
+- **Acceptance criteria**:
+  - Tạo tài khoản thành công với trạng thái `pending_verify`.
+  - Email xác minh được gửi đến địa chỉ email đã nhập.
+  - Tài khoản không thể đăng nhập trước khi xác minh email.
+
+---
+
+### UC-AUTH-003 — Quên và đặt lại mật khẩu
+
+- **Mục tiêu**: Cho phép người dùng lấy lại quyền truy cập khi quên mật khẩu.
+- **Actor chính**: Guest.
+- **Điều kiện trước**: Người dùng có tài khoản với email đã xác minh.
+- **Luồng chính**:
+  1. Người dùng nhập email trên trang quên mật khẩu.
+  2. Hệ thống tạo PasswordResetToken (hết hạn sau 1 giờ), hash và lưu DB.
+  3. Hệ thống gửi email chứa link đặt lại mật khẩu kèm token gốc.
+  4. Người dùng nhấp link, nhập mật khẩu mới.
+  5. Hệ thống xác thực token (còn hạn, chưa dùng).
+  6. Hệ thống hash và lưu mật khẩu mới.
+  7. Hệ thống đánh dấu token đã dùng (`usedAt`).
+  8. Hệ thống thu hồi toàn bộ refresh token hiện có của user.
+  9. Trả về thông báo thành công.
+- **Luồng lỗi**:
+  - Email không tồn tại: trả thành công (chống email enumeration).
+  - Token hết hạn hoặc đã dùng: trả lỗi 400 với mã `INVALID_RESET_TOKEN`.
+- **Business rule áp dụng**: BR-AUTH-006.
+- **Acceptance criteria**:
+  - Email không tồn tại vẫn trả thành công (không lộ thông tin).
+  - Token chỉ dùng được một lần.
+  - Token hết hạn sau 1 giờ.
+  - Mọi phiên đăng nhập bị thu hồi sau khi đặt lại mật khẩu.
+
+---
+
+### UC-AUTH-004 — Khóa tài khoản (admin)
+
+- **Mục tiêu**: Admin khóa tài khoản vi phạm, ngăn đăng nhập ngay lập tức.
+- **Actor chính**: admin, superAdmin.
+- **Điều kiện trước**: Admin có permission `user:block`.
+- **Luồng chính**:
+  1. Admin chọn user cần khóa trên trang quản lý user.
+  2. Admin nhập lý do khóa (không bắt buộc) và xác nhận.
+  3. Hệ thống cập nhật trạng thái user sang `blocked`.
+  4. Hệ thống thu hồi toàn bộ refresh token của user.
+  5. Hệ thống ghi AuditLog với thông tin admin, user bị khóa, lý do.
+  6. Trả về thành công.
+- **Luồng lỗi**:
+  - Không có permission: trả lỗi 403.
+  - User không tồn tại: trả lỗi 404.
+  - Admin không thể tự khóa tài khoản của mình: trả lỗi 400 với mã `CANNOT_BLOCK_SELF`.
+- **Business rule áp dụng**: BR-AUTH-009, BR-SYS-006.
+- **Acceptance criteria**:
+  - Tài khoản bị khóa không thể đăng nhập ngay sau khi khóa.
+  - Mọi phiên đang hoạt động của user bị thu hồi.
+  - AuditLog được ghi đầy đủ.
+
+---
+
+### UC-AUTH-005 — Refresh token
+
+- **Mục tiêu**: Cấp lại access token khi hết hạn mà không yêu cầu đăng nhập lại.
+- **Actor chính**: Authenticated.
+- **Điều kiện trước**: Client có refresh token hợp lệ.
+- **Luồng chính**:
+  1. Client gửi refresh token.
+  2. Hệ thống tìm token trong DB, kiểm tra chưa hết hạn và chưa bị thu hồi.
+  3. Hệ thống kiểm tra user sở hữu token vẫn active.
+  4. Hệ thống phát hành access token mới.
+  5. Hệ thống tạo refresh token mới và thu hồi token cũ (rotation).
+  6. Trả về access token mới và refresh token mới.
+- **Luồng lỗi**:
+  - Token không tồn tại, hết hạn, hoặc đã thu hồi: trả lỗi 401 với mã `INVALID_REFRESH_TOKEN`.
+  - User bị khóa: trả lỗi 403 với mã `ACCOUNT_BLOCKED`.
+- **Business rule áp dụng**: BR-AUTH-005.
+- **Acceptance criteria**:
+  - Refresh token cũ bị thu hồi sau khi xoay vòng.
+  - Không thể dùng refresh token cũ sau khi đã xoay vòng.
+
+---
+
+## 12. User story
+
+### US-AUTH-001 — Đăng nhập bằng email và mật khẩu
+- **Với vai trò**: Học viên
+- **Tôi muốn**: Đăng nhập bằng email và mật khẩu
+- **Để**: Truy cập các khóa học và tài liệu đã mua
+- **Priority**: Must
+- **Given**: Tôi có tài khoản với email và mật khẩu hợp lệ, tài khoản đang active
+- **When**: Tôi nhập email và mật khẩu đúng và nhấn đăng nhập
+- **Then**: Tôi được chuyển vào trang chính với phiên làm việc hợp lệ
+- **Test scenario**: Nhập đúng → thành công; nhập sai mật khẩu → lỗi; tài khoản bị khóa → lỗi rõ ràng
+
+---
+
+### US-AUTH-002 — Đăng ký tài khoản mới
+- **Với vai trò**: Học viên mới
+- **Tôi muốn**: Tạo tài khoản bằng email và mật khẩu
+- **Để**: Bắt đầu học trên hệ thống
+- **Priority**: Must
+- **Given**: Tôi chưa có tài khoản, email chưa được đăng ký
+- **When**: Tôi điền đầy đủ thông tin và gửi form đăng ký
+- **Then**: Tài khoản được tạo, tôi nhận email xác minh, và được thông báo cần xác minh email trước khi đăng nhập
+- **Test scenario**: Email mới → thành công; email trùng → lỗi; mật khẩu yếu → lỗi với mô tả rõ
+
+---
+
+### US-AUTH-003 — Quên mật khẩu
+- **Với vai trò**: Học viên đã có tài khoản
+- **Tôi muốn**: Đặt lại mật khẩu khi quên
+- **Để**: Lấy lại quyền truy cập tài khoản
+- **Priority**: Must
+- **Given**: Tôi có tài khoản với email đã xác minh
+- **When**: Tôi nhập email trên trang quên mật khẩu
+- **Then**: Tôi nhận email có link đặt lại mật khẩu; link hết hạn sau 1 giờ; sau khi đặt lại, mọi phiên cũ bị đăng xuất
+- **Test scenario**: Email tồn tại → nhận email; email không tồn tại → cũng trả thành công (không lộ thông tin); link đã dùng → lỗi
+
+---
+
+### US-AUTH-004 — Đổi mật khẩu khi đã đăng nhập
+- **Với vai trò**: Học viên, admin
+- **Tôi muốn**: Đổi mật khẩu khi đã đăng nhập
+- **Để**: Cập nhật mật khẩu theo ý muốn
+- **Priority**: Must
+- **Given**: Tôi đã đăng nhập
+- **When**: Tôi nhập mật khẩu hiện tại đúng và nhập mật khẩu mới hợp lệ
+- **Then**: Mật khẩu được cập nhật, các phiên khác bị đăng xuất, phiên hiện tại vẫn giữ
+- **Test scenario**: Mật khẩu hiện tại sai → lỗi; mật khẩu mới không đủ mạnh → lỗi; thành công → xác nhận
+
+---
+
+### US-AUTH-005 — Cập nhật hồ sơ cá nhân
+- **Với vai trò**: Học viên, admin
+- **Tôi muốn**: Cập nhật tên, số điện thoại và ảnh đại diện
+- **Để**: Thông tin tài khoản luôn chính xác
+- **Priority**: Must
+- **Given**: Tôi đã đăng nhập
+- **When**: Tôi thay đổi thông tin và lưu
+- **Then**: Thông tin được cập nhật; nếu số điện thoại đã có người dùng thì báo lỗi
+- **Test scenario**: Cập nhật thành công; thay đổi phone trùng → lỗi; họ tên rỗng → lỗi
+
+---
+
+### US-AUTH-006 — Đăng xuất
+- **Với vai trò**: Học viên, admin
+- **Tôi muốn**: Đăng xuất khỏi hệ thống
+- **Để**: Đảm bảo tài khoản an toàn khi dùng thiết bị chung
+- **Priority**: Must
+- **Given**: Tôi đã đăng nhập
+- **When**: Tôi nhấn đăng xuất
+- **Then**: Phiên làm việc bị kết thúc, refresh token bị thu hồi, không thể dùng token cũ
+- **Test scenario**: Đăng xuất → thành công; dùng lại refresh token cũ → lỗi 401
+
+---
+
+### US-AUTH-007 — Admin khóa tài khoản
+- **Với vai trò**: Admin
+- **Tôi muốn**: Khóa tài khoản học viên vi phạm
+- **Để**: Ngăn tài khoản đó đăng nhập ngay lập tức
+- **Priority**: Must
+- **Given**: Tôi là admin có permission user:block
+- **When**: Tôi chọn tài khoản cần khóa và xác nhận
+- **Then**: Tài khoản bị khóa, mọi phiên đăng nhập bị thu hồi, lịch sử hành động được ghi
+- **Test scenario**: Khóa thành công; thử đăng nhập với tài khoản bị khóa → lỗi rõ ràng; audit log có bản ghi
+
+---
+
+### US-AUTH-008 — Admin gán role cho user
+- **Với vai trò**: Admin, superAdmin
+- **Tôi muốn**: Gán hoặc thay đổi role của một user
+- **Để**: Cấp đúng quyền truy cập theo nhiệm vụ
+- **Priority**: Should
+- **Given**: Tôi có permission role:assign
+- **When**: Tôi chọn user, chọn role mới và lưu
+- **Then**: User được cập nhật role, quyền của user thay đổi ngay lập tức, audit log được ghi
+- **Test scenario**: Gán role thành công; gán role không có permission → lỗi 403; audit log có bản ghi
+
+---
+
+## 13. Luồng nghiệp vụ chi tiết
+
+### Luồng 1: Đăng nhập
+
+```
+[Người dùng] → Nhập identifier + password
+     ↓
+[API] → Validate request shape
+     ↓
+[AuthService] → Tìm user theo email / phone / studentCode
+     ↓
+[AuthService] → So sánh passwordHash bằng bcrypt
+     ↓ (sai)
+[AuthService] → Trả lỗi INVALID_CREDENTIALS (401)
+     ↓ (đúng)
+[AuthService] → Kiểm tra status = active
+     ↓ (không active)
+[AuthService] → Trả lỗi theo trạng thái (403)
+     ↓ (active)
+[TokenService] → Tạo JWT access token (15 phút)
+[TokenService] → Tạo refresh token opaque, lưu DB
+     ↓
+[API] → Trả accessToken, refreshToken, user
 ```
 
-# 6. Mapping chức năng – UI – API – Backend – dữ liệu
+### Luồng 2: Refresh token (rotation)
 
-| Chức năng | Web Admin | Web SSStudy | Route | API | Controller | Service | Entity/Table | Permission | Trạng thái xác minh | Ghi chú |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Đăng nhập | /login | /auth/signin | /auth/signin | /auth/signin | AuthController.signin | UserService.generateNewToken | User | site-based permissions | Đã xác nhận | Có validation trên FE và BE |
-| Đăng ký | N/A | /auth/signup | /auth/signup | /auth/signup | AuthController.signup | UserService.generateNewToken | User | Public | Đã xác nhận | Dùng role STUDENT |
-| Google auth | N/A | /auth/signin | /auth/google-auth | /auth/google-auth | AuthController.signInGoogle | google-auth-library | User | Public | Đã xác nhận | Dùng Google SDK |
-| Quên mật khẩu | N/A | /auth/forgot-password | /forgot-password | /forgot-password | UserController.forgottenPass | MailService.resetPassword | User | Public | Đã xác nhận | Gửi mail reset password |
-| Profile | /profile | /account/profile | /user/profile | /user/profile | UserController.profile | N/A | User | Authenticated | Đã xác nhận | Lấy user từ token |
-| Update profile | /profile | /account/profile | /user/update-profile | /user/update-profile | UserController.updateProfile | UploadService | User | Authenticated | Đã xác nhận | Có upload avatar |
-| Đổi mật khẩu | /changepassword | /account/change-password | /user/change-password | /user/change-password | UserController.changePassword | UserService.generateNewToken | User | Authenticated | Đã xác nhận | Có tạo token mới |
-| Check token/scope | N/A | N/A | toàn bộ protected route | middleware | CheckToken/CheckScope | UserService | User | Role/scope | Đã xác nhận | Chạy trên toàn bộ router |
+```
+[Client] → Gửi refreshToken
+     ↓
+[TokenService] → Tìm token trong DB
+     ↓ (không tìm thấy / hết hạn / đã thu hồi)
+[TokenService] → Trả lỗi INVALID_REFRESH_TOKEN (401)
+     ↓ (hợp lệ)
+[TokenService] → Kiểm tra user.status = active
+     ↓
+[TokenService] → Tạo access token mới
+[TokenService] → Tạo refresh token mới, lưu DB
+[TokenService] → Thu hồi refresh token cũ (revokedAt = now)
+     ↓
+[API] → Trả accessToken mới, refreshToken mới
+```
 
-# 7. Test scenario gợi ý từ hành vi hiện trạng
+### Luồng 3: Đặt lại mật khẩu
 
-| Mã test | Chức năng | Tiền điều kiện | Bước thực hiện | Kết quả mong đợi theo source | API/dữ liệu kiểm tra | Ghi chú |
-|---|---|---|---|---|---|---|
-| AUTH-T01 | Đăng nhập thành công bằng email | Tồn tại user ACTIVE | Gửi /auth/signin với email/password | Trả 200 và token | User với email/password đúng | Validate từ backend |
-| AUTH-T02 | Đăng nhập thất bại vì password sai | Tồn tại user ACTIVE | Gửi /auth/signin với email/password sai | Trả lỗi LOGIN_INFO_ERROR | User không đổi | Không tạo token |
-| AUTH-T03 | Đăng ký tài khoản mới | Email/phone chưa tồn tại | Gửi /auth/signup với đầy đủ dữ liệu | Trả 200 và user mới | User được tạo với user_group=STUDENT | Dùng password hash |
-| AUTH-T04 | Đăng ký duplicate email/phone | Email/phone đã tồn tại | Gửi /auth/signup lại | Trả lỗi đã tồn tại | User không tạo mới | Dựa trên findOne |
-| AUTH-T05 | Đổi mật khẩu thành công | Token hợp lệ, mật khẩu cũ đúng | Gửi /user/change-password | Trả 200 và token mới | User.password được cập nhật | Cần deleteKey và tạo token mới |
-| AUTH-T06 | Truy cập route protected mà không có token | Không có Authorization header | Gọi protected route | Trả 401 | CheckToken.verify false | Router middleware chặn |
-| AUTH-T07 | Truy cập route protected với scope không phù hợp | Token hợp lệ nhưng role không có scope | Gọi protected route | Trả 403 | CheckScope false | Dựa vào user_scopes.json |
+```
+[Người dùng] → Nhập email trên trang quên mật khẩu
+     ↓
+[PasswordService] → Tìm user theo email
+     ↓ (dù tìm thấy hay không)
+[PasswordService] → Nếu tìm thấy: tạo reset token, hash, lưu DB, gửi email
+[API] → Luôn trả thành công (chống email enumeration)
+     ↓
+[Người dùng] → Nhấp link email, nhập mật khẩu mới
+     ↓
+[PasswordService] → Xác thực reset token (còn hạn, chưa dùng)
+     ↓ (không hợp lệ)
+[PasswordService] → Trả lỗi INVALID_RESET_TOKEN (400)
+     ↓ (hợp lệ)
+[PasswordService] → Hash mật khẩu mới, cập nhật User
+[PasswordService] → Đánh dấu reset token đã dùng
+[TokenService] → Thu hồi toàn bộ RefreshToken của user
+[API] → Trả thành công
+```
+
+---
+
+## 14. Business rule áp dụng
+
+| Mã rule | Nội dung áp dụng trong module này |
+|---|---|
+| BR-AUTH-001 | Backend phải kiểm tra access token cho mọi endpoint bảo mật |
+| BR-AUTH-002 | User chỉ truy cập hồ sơ và dữ liệu của chính mình, trừ admin có permission |
+| BR-AUTH-003 | Email phải là duy nhất; tài khoản cần xác minh email trước khi đăng nhập |
+| BR-AUTH-004 | Refresh token phải bị thu hồi khi đăng xuất hoặc đổi mật khẩu |
+| BR-AUTH-005 | Access token ngắn hạn (≤ 15 phút); refresh token xoay vòng khi sử dụng |
+| BR-AUTH-006 | Reset token hết hạn sau 1 giờ, chỉ dùng được một lần |
+| BR-AUTH-007 | Khi cập nhật profile, các trường unique phải được kiểm tra trùng lặp |
+| BR-AUTH-008 | Hành động admin tác động đến tài khoản phải có audit log |
+| BR-AUTH-009 | Tài khoản bị khóa không thể đăng nhập; khi khóa phải thu hồi mọi phiên |
+| BR-SYS-001 | Người dùng chỉ thao tác dữ liệu của mình trừ admin |
+| BR-SYS-002 | Backend phải kiểm tra quyền truy cập cho mọi endpoint bảo mật |
+| BR-SYS-006 | Audit log bắt buộc cho hành động cấp quyền, thay đổi role, khóa tài khoản |
+
+---
+
+## 15. Validation
+
+### Đăng nhập
+- `identifier`: bắt buộc, không rỗng.
+- `password`: bắt buộc, không rỗng.
+
+### Đăng ký
+- `fullname`: bắt buộc, 2–255 ký tự.
+- `email`: bắt buộc, format email hợp lệ.
+- `phone`: không bắt buộc, nếu có phải đúng định dạng số điện thoại Việt Nam.
+- `password`: bắt buộc, tối thiểu 8 ký tự, chứa ít nhất một chữ hoa và một chữ số.
+
+### Đổi mật khẩu
+- `currentPassword`: bắt buộc.
+- `newPassword`: bắt buộc, tối thiểu 8 ký tự, chứa chữ hoa và chữ số, khác `currentPassword`.
+
+### Cập nhật hồ sơ
+- `fullname`: không rỗng nếu có, tối đa 255 ký tự.
+- `phone`: không bắt buộc, nếu có phải đúng định dạng.
+- `avatarUrl`: không bắt buộc, nếu có phải là URL hợp lệ.
+
+### Tạo user (admin)
+- `fullname`, `email`, `password`: bắt buộc, theo rule tương ứng.
+- `roleIds`: mảng UUID hợp lệ, ít nhất một role.
+
+---
+
+## 16. State machine
+
+### Trạng thái tài khoản User
+
+```
+[Tạo mới] → pending_verify
+     ↓ (xác minh email thành công)
+   active
+     ↓ (admin khóa)         ↓ (admin vô hiệu hóa)
+  blocked              inactive
+     ↓ (admin mở khóa)      ↓ (admin kích hoạt)
+   active                active
+```
+
+| Trạng thái | Ý nghĩa | Có thể đăng nhập |
+|---|---|---|
+| `pending_verify` | Tài khoản mới tạo, chờ xác minh email | Không |
+| `active` | Tài khoản hoạt động bình thường | Có |
+| `inactive` | Bị vô hiệu hóa tạm thời (không phải do vi phạm) | Không |
+| `blocked` | Bị khóa do vi phạm, cần admin xem xét | Không |
+
+### Trạng thái RefreshToken
+
+```
+active → revoked (khi: đăng xuất / đổi mật khẩu / reset mật khẩu / khóa tài khoản / rotation)
+active → expired (khi: hết hạn theo expiresAt)
+```
+
+---
+
+## 17. Xử lý lỗi
+
+| Mã lỗi | HTTP status | Trường hợp xảy ra | Thông điệp cho người dùng |
+|---|---|---|---|
+| `INVALID_CREDENTIALS` | 401 | Identifier hoặc mật khẩu sai | Thông tin đăng nhập không đúng |
+| `ACCOUNT_BLOCKED` | 403 | Tài khoản bị khóa | Tài khoản của bạn đã bị khóa |
+| `ACCOUNT_INACTIVE` | 403 | Tài khoản bị vô hiệu hóa | Tài khoản của bạn không hoạt động |
+| `EMAIL_NOT_VERIFIED` | 403 | Tài khoản chờ xác minh | Vui lòng xác minh email trước khi đăng nhập |
+| `INSUFFICIENT_ROLE` | 403 | Không đủ role để đăng nhập admin | Bạn không có quyền truy cập trang quản trị |
+| `EMAIL_ALREADY_EXISTS` | 422 | Email đã được sử dụng | Email này đã được đăng ký |
+| `PHONE_ALREADY_EXISTS` | 422 | Số điện thoại đã được sử dụng | Số điện thoại này đã được đăng ký |
+| `PASSWORD_TOO_WEAK` | 422 | Mật khẩu không đủ mạnh | Mật khẩu phải ít nhất 8 ký tự, chứa chữ hoa và chữ số |
+| `INVALID_REFRESH_TOKEN` | 401 | Refresh token không hợp lệ, hết hạn hoặc đã thu hồi | Phiên đăng nhập hết hạn |
+| `INVALID_RESET_TOKEN` | 400 | Reset token không hợp lệ hoặc đã dùng | Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn |
+| `CANNOT_BLOCK_SELF` | 400 | Admin cố khóa tài khoản mình | Không thể khóa tài khoản của chính mình |
+| `USER_NOT_FOUND` | 404 | Không tìm thấy user (admin API) | Không tìm thấy người dùng |
+| `FORBIDDEN` | 403 | Không có permission cho action | Bạn không có quyền thực hiện thao tác này |
+
+---
+
+## 18. Acceptance criteria
+
+| Mã AC | Chức năng | Tiêu chí chấp nhận |
+|---|---|---|
+| AC-AUTH-001 | Đăng nhập | Đăng nhập thành công với thông tin hợp lệ, tài khoản active, trả về accessToken và refreshToken |
+| AC-AUTH-002 | Đăng nhập | Trả lỗi 401 khi mật khẩu sai |
+| AC-AUTH-003 | Đăng nhập | Trả lỗi 403 khi tài khoản blocked, inactive hoặc pending_verify với thông điệp phù hợp |
+| AC-AUTH-004 | Đăng ký | Tạo tài khoản với trạng thái pending_verify và gửi email xác minh |
+| AC-AUTH-005 | Đăng ký | Trả lỗi 422 khi email đã tồn tại |
+| AC-AUTH-006 | Đăng ký | Không thể đăng nhập khi chưa xác minh email |
+| AC-AUTH-007 | Quên mật khẩu | Luôn trả thành công dù email có tồn tại hay không |
+| AC-AUTH-008 | Đặt lại mật khẩu | Token chỉ dùng được một lần; dùng lần hai trả lỗi 400 |
+| AC-AUTH-009 | Đặt lại mật khẩu | Mọi phiên đăng nhập bị thu hồi sau khi đặt lại mật khẩu |
+| AC-AUTH-010 | Refresh token | Refresh token cũ bị thu hồi sau khi xoay vòng; không thể dùng lại |
+| AC-AUTH-011 | Khóa tài khoản | Tài khoản bị khóa không thể đăng nhập; mọi phiên bị thu hồi |
+| AC-AUTH-012 | Audit log | Mọi hành động admin tác động đến tài khoản phải có bản ghi trong audit log |
+| AC-AUTH-013 | API bảo mật | Mọi endpoint cần auth phải trả 401 khi thiếu hoặc sai token |
+| AC-AUTH-014 | Permission | Endpoint cần permission phải trả 403 khi user không có permission đó |
+| AC-AUTH-015 | Profile | Không trả passwordHash trong response profile |
+
+---
+
+## 19. Test/UAT scenario
+
+| Mã kịch bản | Mô tả | Điều kiện ban đầu | Bước thực hiện | Kết quả mong đợi |
+|---|---|---|---|---|
+| T-AUTH-001 | Đăng nhập thành công | User active với email và mật khẩu hợp lệ | Gửi `POST /api/auth/login` với identifier và password đúng | Trả 200 với accessToken, refreshToken, user info |
+| T-AUTH-002 | Đăng nhập sai mật khẩu | User active | Gửi password sai | Trả 401 với mã INVALID_CREDENTIALS |
+| T-AUTH-003 | Đăng nhập tài khoản bị khóa | User blocked | Gửi thông tin đúng | Trả 403 với mã ACCOUNT_BLOCKED |
+| T-AUTH-004 | Đăng nhập chưa xác minh email | User pending_verify | Gửi thông tin đúng | Trả 403 với mã EMAIL_NOT_VERIFIED |
+| T-AUTH-005 | Đăng ký email mới | Email chưa tồn tại | Gửi `POST /api/auth/register` với dữ liệu đầy đủ hợp lệ | Trả 201, gửi email xác minh |
+| T-AUTH-006 | Đăng ký email trùng | Email đã tồn tại | Gửi cùng email | Trả 422 với mã EMAIL_ALREADY_EXISTS |
+| T-AUTH-007 | Xác minh email hợp lệ | User pending_verify, có token chưa hết hạn | Gửi `GET /api/auth/verify-email?token=...` | Trả 200, trạng thái user chuyển sang active |
+| T-AUTH-008 | Xác minh email token hết hạn | Token đã hết hạn | Gửi token cũ | Trả 400 với mã lỗi phù hợp |
+| T-AUTH-009 | Refresh token hợp lệ | User có refresh token còn hạn | Gửi `POST /api/auth/refresh` | Trả 200 với access token mới và refresh token mới |
+| T-AUTH-010 | Refresh token sau khi đã dùng | Đã dùng refresh token một lần | Gửi lại refresh token cũ | Trả 401 với mã INVALID_REFRESH_TOKEN |
+| T-AUTH-011 | Đặt lại mật khẩu thành công | User có reset token chưa hết hạn | Gửi token và mật khẩu mới hợp lệ | Trả 200; các phiên cũ bị thu hồi |
+| T-AUTH-012 | Dùng lại reset token | Token đã được sử dụng | Gửi lại token cũ | Trả 400 với mã INVALID_RESET_TOKEN |
+| T-AUTH-013 | Admin khóa tài khoản | Admin có permission user:block | Gửi `POST /api/admin/users/{id}/block` | Trả 200; user không thể đăng nhập; audit log được ghi |
+| T-AUTH-014 | Truy cập API bảo mật không có token | Không có Authorization header | Gửi request đến endpoint cần auth | Trả 401 |
+| T-AUTH-015 | Truy cập API admin không có permission | User là student | Gửi request đến `/api/admin/users` | Trả 403 |
+
+---
+
+## 20. Phụ thuộc module khác
+
+### Module này phụ thuộc
+- Không phụ thuộc module nghiệp vụ nào. Module Authentication là nền tảng độc lập.
+- Phụ thuộc dịch vụ hạ tầng: EmailService (gửi email xác minh và reset mật khẩu), Google OAuth API.
+
+### Module khác phụ thuộc module này
+- **Tất cả module** phụ thuộc Authentication để:
+  - Kiểm tra token hợp lệ qua `AuthMiddleware`.
+  - Kiểm tra permission qua `PermissionService`.
+  - Xác định ownership (user chỉ truy cập dữ liệu của mình).
+- Module khác **không được** tự tái triển khai logic xác thực — phải dùng middleware và service của module này.
+
+---
+
+## 21. Câu hỏi cần xác nhận
+
+| Câu hỏi | Ảnh hưởng | Đề xuất tạm thời |
+|---|---|---|
+| Policy mật khẩu cụ thể: bao nhiêu ký tự, ký tự đặc biệt có bắt buộc không? | Validation đăng ký và đổi mật khẩu | Tối thiểu 8 ký tự, ít nhất 1 chữ hoa và 1 chữ số |
+| Thời hạn refresh token là bao lâu? | Token rotation policy | Đề xuất 30 ngày |
+| Xác minh email có bắt buộc hay có thể bỏ qua theo cấu hình? | UX đăng ký | Bắt buộc trong phiên bản đầu |
+| Số lần đăng nhập sai tối đa trước khi khóa tài khoản tạm thời? | Security policy | Chưa xác định, đề xuất 5 lần sai trong 15 phút |
+| Đăng nhập Google OAuth có tự động tạo tài khoản nếu email chưa tồn tại không? | UX Google login | Đề xuất: tự động tạo tài khoản với role student |
+| Một user có thể có nhiều role cùng lúc không? | Role model | Đề xuất: có, vì bảng UserRole là N-N |
+| Permission có được cache trong session không? | Hiệu năng kiểm tra quyền | Đề xuất: cache ngắn hạn (5–10 phút) trong Redis |

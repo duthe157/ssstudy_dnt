@@ -1,53 +1,110 @@
-# Kế hoạch đặc tả module
+# Kế hoạch đặc tả module — SSStudy
 
-## 1. Danh sách module cần đặc tả
+## 1. Tổng quan 8 module
 
-| STT | Module | Mục tiêu nghiệp vụ | Source liên quan | Màn hình Admin | Màn hình Web SSStudy | API chính | Entity/Table chính | Phụ thuộc module khác | Mức độ xác minh | Độ ưu tiên đặc tả |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Authentication / tài khoản / phân quyền | Xác thực người dùng, phân quyền truy cập, quản lý hồ sơ và mật khẩu | [api-develop/app/controllers/AuthController.js](../../../../api-develop/app/controllers/AuthController.js), [api-develop/app/controllers/UserController.js](../../../../api-develop/app/controllers/UserController.js), [api-develop/app/routes/CheckToken.js](../../../../api-develop/app/routes/CheckToken.js), [api-develop/app/routes/CheckScope.js](../../../../api-develop/app/routes/CheckScope.js), [api-develop/config/user_scopes.json](../../../../api-develop/config/user_scopes.json), [web-admin/src/redux/auth/action.js](../../../../web-admin/src/redux/auth/action.js), [web-admin/src/routing/PrivateRoute.js](../../../../web-admin/src/routing/PrivateRoute.js), [web-ssstudy/src/services/authService.ts](../../../../web-ssstudy/src/services/authService.ts), [web-ssstudy/src/app/auth/signin/page.tsx](../../../../web-ssstudy/src/app/auth/signin/page.tsx) | /login, /profile, /changepassword | /auth/signin, /auth/signup, /auth/forgot-password, /account/change-password | /auth/signin, /auth/signup, /auth/google-auth, /forgot-password, /user/profile, /user/update-profile, /user/change-password | User | Có phụ thuộc tới hầu hết module khác vì các API khác đều cần token và scope | Cao | Cao |
-| 2 | Classroom / khóa học | Quản lý lớp học và khóa học, hiển thị danh sách/chi tiết cho người dùng và admin | [api-develop/app/controllers/ClassroomController.js](../../../../api-develop/app/controllers/ClassroomController.js), [web-admin/src/components/Master.js](../../../../web-admin/src/components/Master.js), [web-ssstudy/src/app/khoa-hoc](../../../../web-ssstudy/src/app/khoa-hoc) | /classroom-online, /classroom-offline, /classroom/group, /classroom/:id/report, /classroom/:id/member | /khoa-hoc, /khoa-hoc/[id] | /classroom-list, /classroom-view, /classroom-group-list, /classroom-reviews, /classroom-chapter-category | Classroom, ClassroomGroup, ClassroomReview | Phụ thuộc vào Authentication | Cao | Cao |
-| 3 | Document / tài liệu | Quản lý tài liệu, danh mục tài liệu và hiển thị nội dung cho người dùng | [api-develop/app/controllers/DocumentController.js](../../../../api-develop/app/controllers/DocumentController.js), [web-admin/src/components/Master.js](../../../../web-admin/src/components/Master.js), [web-ssstudy/src/app/tai-lieu](../../../../web-ssstudy/src/app/tai-lieu) | /document, /document-category | /tai-lieu, /tai-lieu/[id] | /document/list-public, /document/detail, /document/show | Document, DocumentCategory | Phụ thuộc vào Authentication và Classroom | Cao | Trung bình |
-| 4 | Exam / testing | Quản lý đề thi, câu hỏi và kết quả làm bài | [api-develop/app/controllers/ExamWordController.js](../../../../api-develop/app/controllers/ExamWordController.js), [web-ssstudy/src/app/thi-thu](../../../../web-ssstudy/src/app/thi-thu) | /exam, /exam-word, /testing, /question | /thi-thu, /thi-thu/word-exam/[id], /thi-thu/result/[id] | /exam-word/list, /exam-word/get-by-id, /exam-word/scoring, /testing/* | ExamWord, QuestionWord, Testing | Phụ thuộc vào Authentication và Classroom | Cao | Trung bình |
-| 5 | Order / cart / payment | Quản lý giỏ hàng, đơn hàng, thanh toán và lịch sử giao dịch | [api-develop/app/controllers/OrderController.js](../../../../api-develop/app/controllers/OrderController.js), [api-develop/app/controllers/CartController.js](../../../../api-develop/app/controllers/CartController.js), [web-ssstudy/src/app/gio-hang/page.tsx](../../../../web-ssstudy/src/app/gio-hang/page.tsx), [web-ssstudy/src/app/account/order-history/page.tsx](../../../../web-ssstudy/src/app/account/order-history/page.tsx) | /order, /credit, /coupon | /gio-hang, /thanh-toan/[id], /account/order-history | /cart/*, /order/*, /credit/* | Order, Cart, CreditLog | Phụ thuộc vào Authentication và Classroom | Cao | Trung bình |
-| 6 | Content pages / blog / configuration | Quản lý blog, trang nội dung, giới thiệu, giáo viên và cấu hình website | [api-develop/app/controllers/BlogController.js](../../../../api-develop/app/controllers/BlogController.js), [api-develop/app/controllers/AboutController.js](../../../../api-develop/app/controllers/AboutController.js), [api-develop/app/controllers/PageController.js](../../../../api-develop/app/controllers/PageController.js), [api-develop/app/controllers/CeoPageController.js](../../../../api-develop/app/controllers/CeoPageController.js), [api-develop/app/controllers/TeachersTeamController.js](../../../../api-develop/app/controllers/TeachersTeamController.js), [web-ssstudy/src/app/tin-tuc/[alias]/[slug]/page.tsx](../../../../web-ssstudy/src/app/tin-tuc/[alias]/[slug]/page.tsx), [web-ssstudy/src/app/(gioi-thieu)/ve-chung-toi/_components/MySelfIntroPageClient.tsx](../../../../web-ssstudy/src/app/(gioi-thieu)/ve-chung-toi/_components/MySelfIntroPageClient.tsx), [web-ssstudy/src/app/giao-vien/TeacherIntro.tsx](../../../../web-ssstudy/src/app/giao-vien/TeacherIntro.tsx) | /blog, /blog-category, /settings, /teachers-team, /admin-ceo | /ban-tin, /tin-tuc/[alias]/[slug], /gioi-thieu, /giao-vien | /blog/*, /blog-category/*, /about/*, /page/*, /ceo-page/*, /teachers-team/* | BlogPost, BlogCategory, Page, CeoPage, TeachersTeam | Phụ thuộc vào Authentication | Trung bình | Cao |
-| 7 | Book / book-id / course bundle | Quản lý sách và mã sách liên quan tới khóa học | [api-develop/app/controllers/BookController.js](../../../../api-develop/app/controllers/BookController.js), [api-develop/app/controllers/BookIdController.js](../../../../api-develop/app/controllers/BookIdController.js), [api-develop/app/controllers/BookIdCourseController.js](../../../../api-develop/app/controllers/BookIdCourseController.js), [web-ssstudy/src/app/sach/page.tsx](../../../../web-ssstudy/src/app/sach/page.tsx), [web-ssstudy/src/app/sach-id/page.tsx](../../../../web-ssstudy/src/app/sach-id/page.tsx), [web-ssstudy/src/app/account/my-course/MyCourseForm.tsx](../../../../web-ssstudy/src/app/account/my-course/MyCourseForm.tsx) | /book, /book-id, /book-id-course | /sach, /sach-id, /account/my-course | /book/*, /book-id/*, /book-id-course/* | Book, BookId, BookIdCourse, StudentBookId | Phụ thuộc vào Authentication, Classroom | Trung bình | Cao |
-| 8 | Import/export / báo cáo / tích hợp / scheduler | Báo cáo vận hành, import/export dữ liệu, job/scheduler và cấu hình tích hợp ngoài | `docs/01-srs/modules/08-reporting-import-export-integration-scheduler.md` | /reports, /exports, /imports, /jobs, /integrations | /reports/*, /exports/*, /imports/*, /jobs/*, /integrations/* | Report, ImportBatch, ExportRequest, JobExecutionLog, IntegrationConfig | Phụ thuộc vào Authentication, Classroom, Exam, Order, Document | Cao | Cao |
+| STT | Module | Mục tiêu nghiệp vụ | Màn hình quản trị đề xuất | Màn hình người học đề xuất | API chính đề xuất | Model dữ liệu chính | Phụ thuộc module | Độ ưu tiên |
+|---|---|---|---|---|---|---|---|---|
+| 1 | Authentication / Tài khoản / Phân quyền | Xác thực người dùng, phân quyền truy cập, quản lý hồ sơ và mật khẩu | `/admin/login`, `/admin/users`, `/admin/roles` | `/login`, `/signup`, `/forgot-password`, `/profile` | `POST /api/auth/login`, `POST /api/auth/register`, `GET /api/users/me` | User, Role, Permission, RefreshToken | Không phụ thuộc | Cao — nền tảng toàn hệ thống |
+| 2 | Classroom / Khóa học | Quản lý khóa học, chương, bài học, thành viên và tiến độ học | `/admin/courses`, `/admin/courses/{id}/members` | `/courses`, `/courses/{id}`, `/courses/{id}/curriculum` | `GET /api/courses`, `POST /api/courses/{id}/enroll` | Course, Chapter, Enrollment, Review | Authentication | Cao |
+| 3 | Document / Tài liệu | Quản lý tài liệu, danh mục và quyền truy cập nội dung | `/admin/documents`, `/admin/document-categories` | `/documents`, `/documents/{id}` | `GET /api/documents`, `GET /api/documents/{id}` | Document, DocumentCategory, FileAsset | Authentication, Classroom | Trung bình |
+| 4 | Exam / Kiểm tra | Quản lý đề thi, câu hỏi, lượt làm bài và kết quả | `/admin/exams`, `/admin/questions` | `/exams`, `/exams/{id}`, `/exams/{id}/attempt` | `GET /api/exams`, `POST /api/exams/{id}/attempts`, `POST /api/attempts/{id}/submit` | Exam, Question, ExamAttempt, ExamResult | Authentication, Classroom | Trung bình |
+| 5 | Order / Giỏ hàng / Thanh toán | Quản lý giỏ hàng, đơn hàng, thanh toán, coupon và ví credit | `/admin/orders`, `/admin/coupons`, `/admin/credits` | `/cart`, `/checkout`, `/account/orders`, `/account/credit` | `GET /api/cart`, `POST /api/orders`, `POST /api/webhooks/payments` | Cart, Order, OrderItem, PaymentTransaction, CreditWallet, Coupon | Authentication, Classroom, Book | Cao |
+| 6 | Content / Cấu hình | Quản lý blog, trang tĩnh, banner và cấu hình hệ thống | `/admin/blog`, `/admin/pages`, `/admin/settings` | `/blog`, `/blog/{alias}/{slug}`, `/about`, `/teachers` | `GET /api/blog/posts`, `GET /api/pages/{slug}` | BlogPost, BlogCategory, PageContent, SiteConfig | Authentication | Cao |
+| 7 | Book / Mã kích hoạt | Quản lý sách, mã kích hoạt và bundle khóa học | `/admin/books`, `/admin/book-codes` | `/books`, `/books/{alias}`, `/activate` | `GET /api/books`, `POST /api/book-codes/activate` | Book, BookCode, Bundle, Activation | Authentication, Classroom, Order | Trung bình |
+| 8 | Reporting / Import / Export / Scheduler | Báo cáo vận hành, import/export dữ liệu, job định kỳ và cấu hình tích hợp | `/admin/reports`, `/admin/imports`, `/admin/exports`, `/admin/jobs` | Không có màn hình người học | `GET /api/admin/reports/*`, `POST /api/admin/imports/*`, `GET /api/admin/jobs` | ReportDefinition, ImportBatch, ExportRequest, JobExecution, IntegrationConfig | Authentication và tất cả module (chỉ đọc) | Cao |
 
-## 2. Thứ tự đặc tả đề xuất
+---
 
-1. Authentication / tài khoản / phân quyền
-   - Lý do ưu tiên: đây là nền tảng cho toàn bộ hệ thống. Tất cả route bảo vệ và nhiều module nghiệp vụ đều phụ thuộc vào token và scope.
-   - Bằng chứng rõ ràng: [api-develop/app/routes/routes.js](../../../../api-develop/app/routes/routes.js), [api-develop/app/routes/CheckToken.js](../../../../api-develop/app/routes/CheckToken.js), [api-develop/app/routes/CheckScope.js](../../../../api-develop/app/routes/CheckScope.js), [api-develop/config/user_scopes.json](../../../../api-develop/config/user_scopes.json).
+## 2. Thứ tự phát triển đề xuất
 
-2. Classroom / khóa học
-   - Lý do ưu tiên: có nhiều màn hình admin và web-user, nhiều API phụ thuộc và là module trung tâm trong hệ thống học tập.
+### Giai đoạn 1 — Nền tảng (bắt buộc hoàn thành trước)
+1. **Authentication** — nền tảng cho toàn bộ hệ thống; mọi API bảo mật đều phụ thuộc
+2. **Classroom** — module trung tâm; Document, Exam, Book đều tham chiếu
 
-3. Document / tài liệu
-   - Lý do ưu tiên: có cả UI công khai và admin quản trị, và có nhiều route public/private tương đồng với classroom.
+### Giai đoạn 2 — Nội dung học tập
+3. **Document** — tài liệu học, quyền truy cập PRO
+4. **Exam** — đề thi, làm bài, chấm điểm
+5. **Content/Config** — blog, trang tĩnh, cấu hình website
 
-4. Exam / testing
-   - Lý do ưu tiên: có luồng riêng, liên quan tới dữ liệu câu hỏi và kết quả bài làm, có nhiều API rõ ràng.
+### Giai đoạn 3 — Thương mại
+6. **Order/Payment** — giỏ hàng, thanh toán, coupon
+7. **Book** — sách, mã kích hoạt, bundle
 
-*** End Patch
-- Lý do chọn:
-  - Có đầy đủ bằng chứng từ backend, admin frontend và user frontend.
-  - Là module trung tâm trong hệ thống học tập và có nhiều API và màn hình liên quan.
-  - Có thể đặc tả bằng các file hiện có mà không cần suy đoán nhiều.
-- File đã tạo:
-  - [docs/01-srs/modules/02-classroom-khoa-hoc.md](../modules/02-classroom-khoa-hoc.md)
-- Các source sẽ đối chiếu tiếp:
-  - [api-develop/app/controllers/ClassroomController.js](../../../../api-develop/app/controllers/ClassroomController.js)
-  - [web-admin/src/components/classroom/Classroom.js](../../../../web-admin/src/components/classroom/Classroom.js)
-  - [web-admin/src/components/classroom/ClassroomEdit.js](../../../../web-admin/src/components/classroom/ClassroomEdit.js)
-  - [web-admin/src/components/classroom/ClassroomMember.js](../../../../web-admin/src/components/classroom/ClassroomMember.js)
-  - [web-ssstudy/src/app/khoa-hoc/_components/CourseContent.tsx](../../../../web-ssstudy/src/app/khoa-hoc/_components/CourseContent.tsx)
-  - [web-ssstudy/src/app/khoa-hoc/_components/CourseDetailClient.tsx](../../../../web-ssstudy/src/app/khoa-hoc/_components/CourseDetailClient.tsx)
+### Giai đoạn 4 — Vận hành
+8. **Reporting** — báo cáo, import/export, scheduler, tích hợp
 
-## 5. Module đã hoàn thành sau khi rà soát
-- Tên module: Order / cart / payment
-- File đã tạo: [docs/01-srs/modules/05-order-cart-payment.md](../modules/05-order-cart-payment.md)
-- File phân tích coverage: [docs/02-analysis/coverage-gap-analysis.md](../../02-analysis/coverage-gap-analysis.md)
-- File ma trận truy vết: [docs/02-analysis/traceability-matrix.md](../../02-analysis/traceability-matrix.md)
-- File câu hỏi/rủi ro: [docs/02-analysis/open-questions-and-risks.md](../../02-analysis/open-questions-and-risks.md)
-- Các nguồn đã đối chiếu: [api-develop/app/controllers/CartController.js](../../../../api-develop/app/controllers/CartController.js), [api-develop/app/controllers/OrderController.js](../../../../api-develop/app/controllers/OrderController.js), [api-develop/app/controllers/CreditController.js](../../../../api-develop/app/controllers/CreditController.js), [api-develop/app/routes/routes.js](../../../../api-develop/app/routes/routes.js), [web-ssstudy/src/app/gio-hang/page.tsx](../../../../web-ssstudy/src/app/gio-hang/page.tsx), [web-ssstudy/src/app/gio-hang/thanh-toan/page.tsx](../../../../web-ssstudy/src/app/gio-hang/thanh-toan/page.tsx), [web-ssstudy/src/app/account/order-history/page.tsx](../../../../web-ssstudy/src/app/account/order-history/page.tsx), [web-ssstudy/src/app/account/credit-history/CreditHistoryClient.tsx](../../../../web-ssstudy/src/app/account/credit-history/CreditHistoryClient.tsx), [web-admin/src/components/order/Order.js](../../../../web-admin/src/components/order/Order.js), [web-admin/src/components/credit/Credit.js](../../../../web-admin/src/components/credit/Credit.js), [web-admin/src/components/coupon/Coupon.js](../../../../web-admin/src/components/coupon/Coupon.js)
-- Ghi chú: module này có bằng chứng thực thi mạnh ở cả backend và frontend, nhưng các rule coupon chi tiết và callback PayOS cần xác nhận thêm trong môi trường vận hành.
+---
+
+## 3. Dependency giữa các module
+
+```mermaid
+flowchart TD
+  AUTH[01 Authentication]
+  CLS[02 Classroom]
+  DOC[03 Document]
+  EXAM[04 Exam]
+  ORD[05 Order/Payment]
+  CNT[06 Content/Config]
+  BOOK[07 Book]
+  RPT[08 Reporting]
+
+  CLS --> AUTH
+  DOC --> AUTH
+  DOC --> CLS
+  EXAM --> AUTH
+  EXAM --> CLS
+  ORD --> AUTH
+  ORD --> CLS
+  ORD --> BOOK
+  CNT --> AUTH
+  BOOK --> AUTH
+  BOOK --> CLS
+  RPT --> AUTH
+  RPT -.->|chỉ đọc| CLS
+  RPT -.->|chỉ đọc| EXAM
+  RPT -.->|chỉ đọc| ORD
+  RPT -.->|chỉ đọc| DOC
+```
+
+---
+
+## 4. Nguyên tắc đặc tả module
+
+Mỗi module SRS phải có đầy đủ:
+
+1. **Mục tiêu nghiệp vụ** — module này giải quyết vấn đề gì
+2. **Phạm vi chức năng** — danh sách đầy đủ các chức năng cần có
+3. **Ngoài phạm vi** — không làm gì để tránh hiểu nhầm
+4. **Actor** — ai sử dụng module này
+5. **Permission** — danh sách mã permission cần có
+6. **Danh sách chức năng** — bảng với mã chức năng, actor, màn hình, API, model, rule, priority
+7. **Thiết kế dữ liệu** — domain model đề xuất với field chi tiết, quan hệ, index
+8. **Thiết kế kiến trúc module** — các thành phần cần có, dependency, nguyên tắc
+9. **Yêu cầu giao diện** — màn hình đề xuất cho admin và người học
+10. **API đề xuất** — bảng API với method, endpoint, auth, permission, request, response, rule
+11. **Use case nghiệp vụ** — mỗi use case có luồng chính, thay thế và lỗi
+12. **User story** — Given/When/Then rõ ràng, priority, test scenario
+13. **Luồng nghiệp vụ chi tiết** — mô tả bước-by-bước các luồng quan trọng
+14. **Business rule áp dụng** — tham chiếu mã BR-* từ `business-rules.md`
+15. **Validation** — các rule validation cho đầu vào
+16. **State machine** — nếu có đối tượng có nhiều trạng thái
+17. **Xử lý lỗi** — các lỗi có thể xảy ra và cách xử lý
+18. **Acceptance criteria** — điều kiện để chức năng được chấp nhận
+19. **Test/UAT scenario** — kịch bản kiểm thử đầy đủ
+20. **Phụ thuộc module khác** — module này phụ thuộc gì, ai phụ thuộc module này
+21. **Câu hỏi cần xác nhận** — các điểm chưa rõ cần xác nhận với stakeholder
+
+---
+
+## 5. Trạng thái hoàn thành
+
+| Module | Trạng thái | Ghi chú |
+|---|---|---|
+| 01 Authentication | Có nội dung cơ bản | Cần bổ sung use case chi tiết, domain model đầy đủ |
+| 02 Classroom | Có nội dung cơ bản | Cần bổ sung use case chi tiết |
+| 03 Document | Có nội dung | Cần rà soát văn phong |
+| 04 Exam | Có nội dung | Cần rà soát văn phong |
+| 05 Order/Payment | Có nội dung | Cần bổ sung domain model đầy đủ |
+| 06 Content/Config | Có nội dung | Cần rà soát văn phong |
+| 07 Book | Có nội dung | Cần rà soát văn phong |
+| 08 Reporting | Có nội dung | Cần bổ sung đầy đủ theo yêu cầu |
