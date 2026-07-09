@@ -788,6 +788,7 @@ class ClassroomService {
             heading.push("Tổng bài thi");
             heading.push("Tổng số buổi");
             heading.push("Số buổi đã học");
+            heading.push("Nộp theo");
             heading.push("Số buổi còn lại");
             heading.push("Trạng thái");
             heading.push("Thời gian tham gia");
@@ -803,6 +804,7 @@ class ClassroomService {
                 _item.push(item.total_testing);
                 _item.push(item.sobuoihoc);
                 _item.push(item.buoidahoc);
+                _item.push(item.pay_type);
                 _item.push(parseInt(item.sobuoihoc) - parseInt(item.buoidahoc));
 
                 let status = '';

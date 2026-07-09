@@ -24,6 +24,9 @@ export default function ContactMenu() {
           #omi_kep {
             bottom: 60px !important;
           }
+          #omi_6ia {
+            --omi-lt-tfm: 70px;
+          }
         }
         body.account-menu-open .omi-lt-nhc-vr,
         body.account-menu-open [class*="omi-lt-"] {

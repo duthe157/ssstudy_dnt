@@ -17,23 +17,25 @@ const Item = ({ item, itemIndex, screen }) => {
     }
   }, [screen]);
 
-  const imageUrl = item?.image || item?.avatar;
+  const imageUrl = item?.image || item?.data_json?.avatar || item?.avatar;
   const schoolInfo = item?.description || item?.address;
   const classInfo = item?.content;
 
   return (
     <div key={itemIndex} className={className}>
-      <div className="w-full flex-shrink-0 bg-gray-100 overflow-hidden rounded-t-[6px] h-[203px]">
-        <img
-          src={imageUrl}
-          alt={item?.name}
-          className="w-full h-full object-cover object-center transition-transform duration-500 group-hover/item:scale-105"
-        />
+      <div className="w-full flex-shrink-0 bg-gray-100 overflow-hidden rounded-t-[6px] aspect-square">
+        {imageUrl && (
+          <img
+            src={imageUrl}
+            alt={item?.name}
+            className="w-full h-full object-cover object-center transition-transform duration-500 group-hover/item:scale-105"
+          />
+        )}
       </div>
 
-      <div className="flex flex-col gap-4 px-4 py-8">
+      <div className="flex flex-col gap-3 px-4 py-5">
         {item.data_json?.score && (
-          <p className="text-[#f44336] font-bold text-[28px] leading-none truncate">
+          <p className="text-[#f44336] font-bold text-[20px] leading-normal truncate">
             {formatScore(item.data_json.score)}{" "}
             {item?.subject?.name}
           </p>

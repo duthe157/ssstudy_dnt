@@ -208,6 +208,9 @@ class Row extends Component {
 					</span>
 				</td>
 				<td>
+					<span className='item-amount d-none d-sm-block text-sm text-center'>{this.props.obj.pay_type || ''}</span>
+				</td>
+				<td>
 					<span>{this.getStudentStatus(this.props.obj)}</span>
 				</td>
 				<td>
@@ -729,6 +732,9 @@ class ClassroomMember extends Component {
 										</th>
 										<th className='text-center'>
 											<b>Số buổi còn lại</b>
+										</th>
+										<th className='text-center'>
+											<b>Nộp theo</b>
 										</th>
 										<th className="text-left">
 											Trạng thái

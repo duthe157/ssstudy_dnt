@@ -29,6 +29,7 @@ const SettingModel = require('../models/Setting');
 const CartCategoryModel = require('../models/CartCategory');
 const BookModel = require('../models/Book');
 const UserTestingModel = require('../models/UserTesting');
+const BillingModel = require('../models/Billing');
 const UserService = require('../services/UserService');
 const FastGiftModel = require("../models/FastGift");
 const CategoryLivestreamModel = require('../models/CategoryLivestream');
@@ -635,6 +636,24 @@ class ClassroomController {
                 ];
             }
             const members = await UserModel.find(conditions);
+            const payTypeByUserId = {};
+            if (arrayID.length > 0) {
+                const bills = await BillingModel.find({
+                    'user.id': { $in: arrayID },
+                    deleted_at: null,
+                    items: {
+                        $elemMatch: {
+                            id
+                        }
+                    }
+                }, null, { sort: { billed_at: -1, created_at: -1 } });
+                for (let i = 0; i < bills.length; i++) {
+                    const userID = bills[i].user ? bills[i].user.id : null;
+                    if (userID && typeof payTypeByUserId[userID] === 'undefined') {
+                        payTypeByUserId[userID] = bills[i].pay_type || null;
+                    }
+                }
+            }
             conditions = {};
             const date = BaseHelper.startDateEndDate(month, year);
             conditions['classroom.id'] = id;
@@ -691,6 +710,7 @@ class ClassroomController {
                 student.buoidahoc = arrayBuoiHoc[members[i].id] ? arrayBuoiHoc[members[i].id].buoidahoc : 0;
                 student.joined_at = arrayBuoiHoc[members[i].id] ? arrayBuoiHoc[members[i].id].joined_at : null;
                 student.lesson_view_dates = arrayBuoiHoc[members[i].id].lesson_view_dates;
+                student.pay_type = typeof payTypeByUserId[members[i].id] !== 'undefined' ? payTypeByUserId[members[i].id] : null;
 
                 data.push(student);
             }

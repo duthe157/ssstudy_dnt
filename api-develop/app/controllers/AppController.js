@@ -179,7 +179,7 @@ class AppController {
             const teachers = await UserModel.find({ user_group: 'TEACHER', is_show_profile: true, status: 'ACTIVE', deleted_at: null }, projection, { limit: 20 });
             const reviews = await AdultEvalutionModel.find({ status: true, deleted_at: null, type: 'DANHGIA_PHUHUYNH' }, null, { limit: 50 });
             const reviewStudent = await AdultEvalutionModel.find({ status: true, deleted_at: null, type: 'DANHGIA_HOCSINH' }, null, { limit: 50 });
-            const topRanks = await AdultEvalutionModel.find({ status: true, deleted_at: null, type: 'TOP_RANKS'}, null, { limit: 50 });
+            const topRanks = await AdultEvalutionModel.find({ status: true, deleted_at: null, type: 'TOP_RANKS'}, null, { limit: 50, sort: { created_at: -1 } });
             const examCategories = await ExamCategoryModel.find({ _id: { $in: appConfig.ID_EXAM_CATEGORY_FIXED } }, null, { sort: { created_at: 1 } });
 
             const mediaPosts = await BlogPostModel.find({ status: true, 'category.id': appConfig.HOME_POST.MEDIA, deleted_at: null }, null, { limit: 10 });
@@ -331,7 +331,7 @@ class AppController {
             const projection = 'fullname phone email avatar description content alias link_fb external_link profile_pic';
             const teachers = await UserModel.find({ user_group: 'TEACHER', is_show_profile: true, status: 'ACTIVE', deleted_at: null }, projection, { limit: 20 });
             const reviews = await AdultEvalutionModel.find({ status: true, deleted_at: null, type: 'DANHGIA_PHUHUYNH' }, null, { limit: 50 });
-            const topRanks = await AdultEvalutionModel.find({ status: true, deleted_at: null, type: 'TOP_RANKS'}, null, { limit: 50 });
+            const topRanks = await AdultEvalutionModel.find({ status: true, deleted_at: null, type: 'TOP_RANKS'}, null, { limit: 50, sort: { created_at: -1 } });
             const examCategories = await ExamCategoryModel.find({ _id: { $in: appConfig.ID_EXAM_CATEGORY_FIXED } }, null, { sort: { created_at: 1 } });
 
             const mediaPosts = await BlogPostModel.find({ status: true, 'category.id': appConfig.HOME_POST.MEDIA, deleted_at: null }, null, { limit: 10 });

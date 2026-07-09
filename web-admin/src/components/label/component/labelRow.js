@@ -60,7 +60,7 @@ class LabelRow extends Component {
                     </td>
 
                     {/* Số lượng gán */}
-                    <td>{tag.num_item} bài học</td>
+                    <td>{tag.num_item}</td>
 
                     {/* Cập nhật */}
                     <td>{formatDate(tag.updated_at)}</td>
@@ -178,7 +178,7 @@ class LabelRow extends Component {
                                                         </Link>
                                                     </div>
                                                 </td>
-                                                <td>{child.num_item} bài tập</td>
+                                                <td>{child.num_item}</td>
                                                 <td>{formatDate(child.updated_at)}</td>
                                                 <td className="text-right">
                                                     {viewMode === 'all' && (

@@ -13,7 +13,7 @@ function ResultPopup({
       footer={null}
       closable={false}
       centered
-      width="min(90vw, 900px)"
+      width="min(90vw, 480px)"
       maskClosable
     >
       <button
@@ -24,23 +24,20 @@ function ResultPopup({
       </button>
 
       <div className="p-2">
-        <div className="flex items-center gap-6">
-          <div>
-            <div className="text-xl font-bold text-[#242A4B]">
-              {data?.data_json?.name}
-            </div>
-
-            <div className="mt-2 text-base leading-relaxed text-[#50556F] font-medium">
-              {data?.data_json?.school}
-            </div>
+        <div className="mb-4">
+          <div className="text-xl font-bold text-[#242A4B]">
+            {data?.data_json?.name || data?.name}
+          </div>
+          <div className="mt-1 text-base text-[#50556F] font-medium">
+            {data?.data_json?.school || data?.description}
           </div>
         </div>
 
-        <div className="mt-8 overflow-hidden rounded-3xl">
+        <div className="overflow-hidden rounded-2xl">
           <img
             src={data?.data_json?.image_popup}
             alt=""
-            className="w-full object-cover"
+            className="w-full h-auto object-contain"
           />
         </div>
       </div>

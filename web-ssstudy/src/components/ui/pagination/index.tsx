@@ -22,47 +22,21 @@ export function CustomPagination({
   className,
 }: CustomPaginationProps) {
   // Hàm tạo ra danh sách các trang cần hiển thị
-  const generatePageNumbers = () => {
-    const pageNumbers: (number | string)[] = [];
-    // Hiển thị 2 trang đầu
-    if (totalPages > 1) {
-      pageNumbers.push(1);
-      if (totalPages > 2) {
-        pageNumbers.push(2);
-      }
+  const generatePageNumbers = (): (number | string)[] => {
+    // Với ít trang, hiển thị tất cả
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
-
-    // Hiển thị dấu "..." nếu cần
-    if (currentPage > 4) {
-      pageNumbers.push("...");
+    // Vùng đầu: cố định 4 trang đầu
+    if (currentPage <= 3) {
+      return [1, 2, 3, 4, "...", totalPages];
     }
-
-    // Hiển thị các trang xung quanh trang hiện tại
-    for (
-      let i = Math.max(3, currentPage - 1);
-      i <= Math.min(totalPages - 2, currentPage + 1);
-      i++
-    ) {
-      if (!pageNumbers.includes(i)) {
-        pageNumbers.push(i);
-      }
+    // Vùng cuối: cố định 4 trang cuối
+    if (currentPage >= totalPages - 2) {
+      return [1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
     }
-
-    // Hiển thị dấu "..." nếu cần
-    if (currentPage < totalPages - 3) {
-      pageNumbers.push("...");
-    }
-
-    // Hiển thị 2 trang cuối
-    if (totalPages > 3) {
-      if (totalPages > 4) {
-        pageNumbers.push(totalPages - 1);
-      }
-      pageNumbers.push(totalPages);
-    }
-
-    // Loại bỏ các phần tử trùng lặp
-    return Array.from(new Set(pageNumbers));
+    // Vùng giữa: trang hiện tại +- 1
+    return [1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages];
   };
 
   const pages = generatePageNumbers();

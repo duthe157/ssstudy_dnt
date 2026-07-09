@@ -89,11 +89,11 @@ class AdultEvaluationCreate extends Component {
             ...data.students,
             type: 'TAMTINHHOCVIEN',
             content: data.comment,
-            classroom_id: data.classroom.id,
-            subject_id: data.subject.id,
+            classroom_id: data?.classroom?.id,
+            subject_id: data?.subject?.id,
             status: data.hiden,
-            external_link: data.students.links,
-            group_id: data.classroom_group.id,
+            external_link: data?.students?.links,
+            group_id: data?.classroom_group?.id,
           });
           break;
         }
@@ -109,9 +109,9 @@ class AdultEvaluationCreate extends Component {
             videoUrl: data_json?.links || '',
             address: data_json?.address || '',
             score: data_json?.score || '',
-            classroom_id: data.classroom.id,
-            subject_id: data.subject.id,
-            group_id: data.classroom_group.id,
+            classroom_id: data?.classroom?.id,
+            subject_id: data?.subject?.id,
+            group_id: data?.classroom_group?.id,
           })
         }
       }
@@ -488,14 +488,16 @@ class AdultEvaluationCreate extends Component {
                                   <>
                                     <img style={{width: '200px'}} className='mt-3' src={this.getImageSrc(this.state.files)} alt=""/>
 
-                                    <button
-                                      className="btn btn-primary mt-2"
-                                      onClick={() => this.setState({
-                                        files: null,
-                                      })}
-                                    >
-                                      Xoá file
-                                    </button>
+                                    <div>
+                                      <button
+                                        className="btn btn-primary mt-2"
+                                        onClick={() => this.setState({
+                                          files: null,
+                                        })}
+                                      >
+                                        Xoá file
+                                      </button>
+                                    </div>
                                   </>
                                 }
                               </div>
@@ -515,18 +517,20 @@ class AdultEvaluationCreate extends Component {
                                 />
 
                                 {
-                                  this.state.avatar &&
+                                  this.state?.avatar &&
                                   <>
                                     <img style={{width: '200px'}} className='mt-3' src={this.getImageSrc(this.state.avatar)} alt=""/>
 
-                                    <button
-                                      className="btn btn-primary mt-2"
-                                      onClick={() => this.setState({
-                                        files: null,
-                                      })}
-                                    >
-                                      Xoá file
-                                    </button>
+                                    <div>
+                                      <button
+                                        className="btn btn-primary mt-2"
+                                        onClick={() => this.setState({
+                                          avatar: null,
+                                        })}
+                                      >
+                                        Xoá file
+                                      </button>
+                                    </div>
                                   </>
                                 }
 
@@ -586,18 +590,20 @@ class AdultEvaluationCreate extends Component {
                                 />
 
                                 {
-                                  this.state.files &&
+                                  this.state?.files &&
                                   <>
                                     <img style={{width: '200px'}} className='mt-3' src={this.getImageSrc(this.state.files)} alt=""/>
 
-                                    <button
-                                      className="btn btn-primary mt-2"
-                                      onClick={() => this.setState({
-                                        files: null,
-                                      })}
-                                    >
-                                      Xoá file
-                                    </button>
+                                    <div>
+                                      <button
+                                        className="btn btn-primary mt-2"
+                                        onClick={() => this.setState({
+                                          files: null,
+                                        })}
+                                      >
+                                        Xoá file
+                                      </button>
+                                    </div>
                                   </>
                                 }
                               </div>
@@ -615,68 +621,49 @@ class AdultEvaluationCreate extends Component {
                                 />
 
                                 {
-                                  this.state.thumnailImg &&
+                                  this.state?.thumnailImg &&
                                   <>
                                     <img style={{width: '200px'}} className='mt-3' src={this.getImageSrc(this.state.thumnailImg)} alt=""/>
 
-                                    <button
-                                      className="btn btn-primary mt-2"
-                                      onClick={() => this.setState({
-                                        files: null,
-                                      })}
-                                    >
-                                      Xoá file
-                                    </button>
+                                    <div>
+                                      <button
+                                        className="btn btn-primary mt-2"
+                                        onClick={() => this.setState({
+                                          thumnailImg: null,
+                                        })}
+                                      >
+                                        Xoá file
+                                      </button>
+                                    </div>
                                   </>
                                 }
                               </div>
                             </div>
                           </>
                         )}
-                        {this.state.type !== "DANHGIA_PHUHUYNH" && (
-                          <>
-                            <div className="col-sm-3">
-                              <label className=" col-form-label">
-                                Khoá học
-                              </label>
-                              <div>
-                                <select
-                                  className="form-control"
-                                  name="classroom_id"
-                                  onChange={this._onChange}
-                                  value={this.state.classroom_id}
-                                >
-                                  <option value="">Chọn khoá học</option>
-                                  {this.props?.classrooms?.map((item) => (
-                                    <option key={item._id} value={item._id}>
-                                      {item.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            </div>
-                            <div className="col-sm-3">
-                              <label className=" col-form-label">Môn học</label>
-                              <div>
-                                <select
-                                  className="form-control"
-                                  name="subject_id"
-                                  onChange={this._onChange}
-                                  value={this.state.subject_id}
-                                >
-                                  <option value="">Chọn môn học</option>
 
-                                  {this.props?.subjects?.map((item) => (
-                                    <option key={item._id} value={item._id}>
-                                      {item.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
+                        {this.state.type !== "DANHGIA_PHUHUYNH" && (
+                          <div className="col-sm-6">
+                            <label className=" col-form-label">Danh mục</label>
+                            <div>
+                              <select
+                                className="form-control"
+                                name="group_id"
+                                onChange={this._onChange}
+                                value={this.state.group_id}
+                              >
+                                <option value="">Chọn danh mục</option>
+                                {this.props?.classroomGroups?.map((item) => (
+                                  <option key={item._id} value={item._id}>
+                                    {item.name}
+                                  </option>
+                                ))}
+                              </select>
                             </div>
-                          </>
+                          </div>
                         )}
                       </div>
+
                       <div className="form-group row">
                         <div className="col-sm-6">
                           <label className=" col-form-label">Trạng thái</label>
@@ -691,6 +678,54 @@ class AdultEvaluationCreate extends Component {
                             </Radio.Group>
                           </div>
                         </div>
+
+                        {this.state.type !== "DANHGIA_PHUHUYNH" && (
+                          <>
+                            <div className="col-sm-3">
+                              <label className=" col-form-label">Môn học</label>
+                              <div>
+                                <select
+                                  className="form-control"
+                                  name="subject_id"
+                                  onChange={this._onChange}
+                                  disabled={!this.state.group_id}
+                                  value={this.state.subject_id}
+                                >
+                                  <option value="">Chọn môn học</option>
+
+                                  {this.props?.subjects?.map((item) => (
+                                    <option key={item._id} value={item._id}>
+                                      {item.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="col-sm-3">
+                              <label className=" col-form-label">
+                                Khoá học
+                              </label>
+                              <div>
+                                <select
+                                  className="form-control"
+                                  name="classroom_id"
+                                  onChange={this._onChange}
+                                  disabled={!this.state.subject_id}
+                                  value={this.state.classroom_id}
+                                >
+                                  <option value="">Chọn khoá học</option>
+                                  {this.props?.classrooms?.map((item) => (
+                                    <option key={item._id} value={item._id}>
+                                      {item.name}
+                                    </option>
+                                  ))}ía
+                                </select>
+                              </div>
+                            </div>
+                          </>
+                        )}
+
                         {this.state.type === "DANHGIA_PHUHUYNH" && (
                           <>
                             <div className="col-sm-2">
@@ -762,26 +797,6 @@ class AdultEvaluationCreate extends Component {
                               </div>
                             )}
                           </>
-                        )}
-                        {this.state.type !== "DANHGIA_PHUHUYNH" && (
-                          <div className="col-sm-6">
-                            <label className=" col-form-label">Danh mục</label>
-                            <div>
-                              <select
-                                className="form-control"
-                                name="group_id"
-                                onChange={this._onChange}
-                                value={this.state.group_id}
-                              >
-                                <option value="">Chọn danh mục</option>
-                                {this.props?.classroomGroups?.map((item) => (
-                                  <option key={item._id} value={item._id}>
-                                    {item.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
                         )}
                       </div>
                       {this.state.type === "TAMTINHHOCVIEN" && (

@@ -20,7 +20,7 @@ class LabelAssign extends Component {
             subject_id: '',
             teacher_id: '',
             keyword: '',
-            item_type: 'BOOK',
+            item_type: 'CLASSROOM',
 
             ids: [],        
             checkAll: false, 
@@ -276,9 +276,9 @@ class LabelAssign extends Component {
 
                     {/* Loại */}
                     <td>
-                        <span className={`badge badge-pill ${item.type === 'course' ? 'badge-info' : 'badge-secondary'}`}
+                        <span className={`badge badge-pill ${item.item_type === 'CLASSROOM' ? 'badge-info' : 'badge-secondary'}`}
                             style={{ fontSize: 11, padding: '4px 8px' }}>
-                            {item.type === 'course' ? 'Khóa học' : item.type === 'book_id' ? 'Sách ID' : 'Sách'}
+                            {item.item_type === 'CLASSROOM' ? 'Khóa học' : item.item_type === 'BOOK_ID' ? 'Sách ID' : 'Sách'}
                         </span>
                     </td>
 
