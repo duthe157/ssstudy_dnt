@@ -1,126 +1,73 @@
-# SSStudy Infrastructure AS-IS and Target Recommendation
+# SSStudy Infrastructure — Target Recommendation
 
-## 1. Thông tin tài liệu
-- Tên tài liệu: SSStudy Infrastructure AS-IS and Target Recommendation
-- Phiên bản: 0.1
-- Trạng thái: AS-IS Reverse-engineered + Target Recommendation
-- Source đã phân tích:
-  - api-develop/package.json
-  - api-develop/app.js
-  - api-develop/db/mongo.js
-  - api-develop/config/config.js.example
-  - api-develop/config/uat.json
-  - api-develop/config/payOS.js
-  - api-develop/Dockerfile
-  - api-develop/ecosystem.config.js
-  - api-develop/Jenkinsfile
-  - api-develop/Jenkinsfile.docker
-  - api-develop/.gitlab-ci.yml
-  - api-develop/README.md
-  - api-develop/DEPLOY_SETUP.md
-  - api-develop/JENKINS_CONFIG_MANAGEMENT.md
-  - web-admin/package.json
-  - web-admin/.env
-  - web-admin/src/config/config.js.example
-  - web-admin/BUILD_GUIDE.md
-  - web-admin/.gitlab-ci.yml
-  - web-admin/Jenkinsfile
-  - web-ssstudy/package.json
-  - web-ssstudy/next.config.mjs
-  - web-ssstudy/README.md
-  - web-ssstudy/.env.development
-  - web-ssstudy/.env.staging
-  - web-ssstudy/.env.production
-  - web-ssstudy/Dockerfile
-  - web-ssstudy/Jenkinsfile
-  - web-ssstudy/.gitlab-ci.yml
-- SSStudy Database Architecture Assessment: [SSSTUDY-DATABASE-ARCHITECTURE-ASSESSMENT.md](SSSTUDY-DATABASE-ARCHITECTURE-ASSESSMENT.md)
-- Mục đích sử dụng:
-  - Onboard developer và DevOps mới.
-  - Cài môi trường local.
-  - Chuẩn bị môi trường DEV/UAT/PROD.
-  - Xác định các hệ thống phụ thuộc và rủi ro vận hành.
-  - Làm cơ sở đặt kế hoạch deploy và vận hành sau này.
-- Giới hạn tài liệu:
-  - Chỉ ghi nhận những gì có bằng chứng từ source hiện có.
-  - Nội dung chưa đủ bằng chứng được ghi là [CẦN XÁC NHẬN].
-  - Nội dung có dấu hiệu thiếu kiểm soát, thiếu nhất quán hoặc nguy cơ vận hành được ghi là [RỦI RO / TECHNICAL DEBT].
+## 1. Purpose and scope
+- Purpose: provide a concise, implementation-ready infrastructure recommendation to support the SSStudy SRS modules.
+- Scope: target architecture, recommended managed services, deployment patterns, security and observability guidance. This document is target-first and does not treat existing source code as the basis for design.
 
-## 2. Tổng quan kiến trúc hạ tầng
+## 2. Overview — Target architecture
 
-### 2.1 Mô tả hệ thống hiện trạng
-- web-admin là frontend quản trị xây dựng bằng React 16 + Create React App.
-- web-ssstudy là frontend người dùng/học viên xây dựng bằng Next.js 16 + React.
-- api-develop là backend Node.js + Express.js.
-- Backend kết nối MongoDB và Redis, đồng thời tích hợp PayOS, SMTP, AWS SDK, Google OAuth và các dịch vụ bên ngoài khác.
-- Có bằng chứng về CI/CD bằng Jenkins/GitLab và deploy container/PM2/EC2/S3.
-
-### 2.2 Kiến trúc hiện trạng (AS-IS)
 ```mermaid
 flowchart LR
-  A[web-admin React 16] --> B[api-develop Express/Node.js]
-  C[web-ssstudy Next.js] --> B
-  B --> D[(MongoDB)]
-  B --> E[(Redis)]
-  B --> F[PayOS]
-  B --> G[SMTP / Email]
-  B --> H[AWS SDK / S3 / SNS]
-  B --> I[Google OAuth]
-  B --> J[PM2 / Docker / Jenkins / GitLab CI]
+   CDN[CDN / Reverse Proxy] --> Frontend[Frontend Static / Next.js]
+   CDN --> APIGW[API Gateway / ALB]
+   APIGW --> App[API service fleet]
+   App --> Mongo[(Managed Document DB)]
+   App --> Cache[(Managed Cache)]
+   App --> ObjectStorage[(Object Storage)]
+   App --> EmailSvc[Email / SMS / Notification]
+   App --> Secrets[Secrets Manager]
+   App --> Observability[Monitoring / Logging]
+   App --> Jobs[Scheduler / Job Runner]
 ```
 
-### 2.3 Kiến trúc mục tiêu đề xuất (TARGET)
-```mermaid
-flowchart LR
-  A[CDN / Reverse Proxy] --> B[Frontend Static / Next.js]
-  A --> C[API Gateway / ALB]
-  C --> D[API container fleet]
-  D --> E[(Managed MongoDB)]
-  D --> F[(Managed Redis)]
-  D --> G[Object Storage]
-  D --> H[Email / SMS / Notification]
-  D --> I[Secrets Manager]
-  D --> J[Monitoring / Logging]
-  D --> K[CI/CD pipeline]
-```
+Key recommendations:
+- Use managed services for stateful components where possible (managed document DB, managed cache, object storage).
+- Frontend delivered via CDN; server-rendered frontend (Next.js) should be deployed as static + edge functions where appropriate.
+- API layer behind an API Gateway/ALB with JWT/OAuth bearer authentication and rate limiting.
+- Scheduler and background jobs run in isolated workers with idempotency and retry policies.
 
-## 3. Hạ tầng AS-IS xác định từ source
+## 3. Recommended components
 
-| Thành phần | Công nghệ/Service | Vai trò | Source áp dụng | Bằng chứng | Mức độ xác minh | Ghi chú |
-|---|---|---|---|---|---|---|
-| Backend runtime | Node.js + Express.js | API chính | api-develop | api-develop/package.json, api-develop/app.js | Đã xác minh | Express dùng middleware, route và webhook |
-| Frontend admin | React 16 + CRA | Giao diện quản trị | web-admin | web-admin/package.json, web-admin/BUILD_GUIDE.md | Đã xác minh | Build bằng react-scripts |
-| Frontend user | Next.js 16 + React | Giao diện người dùng/học viên | web-ssstudy | web-ssstudy/package.json, web-ssstudy/next.config.mjs | Đã xác minh | Có env cho DEV/STAGING/PROD |
-| Database | MongoDB | Lưu trữ dữ liệu nghiệp vụ | api-develop | api-develop/package.json, api-develop/db/mongo.js, api-develop/config/uat.json | Đã xác minh | Mongoose ODM |
-| Cache | Redis | Cache/session/job nhẹ | api-develop | api-develop/package.json, api-develop/README.md, api-develop/config/uat.json | Đã xác minh | Cấu hình host/port/password |
-| Storage | S3-compatible cấu hình + CDN domain | Upload/file/media | api-develop | api-develop/config/config.js.example, api-develop/config/app.js | Một phần | Có cấu hình S3 nhưng chưa thấy implementation production đầy đủ |
-| Payment | PayOS | Thanh toán | api-develop | api-develop/package.json, api-develop/config/payOS.js, api-develop/config/config.js.example | Đã xác minh | Webhook endpoint /hook/payment |
-| Email/notification | nodemailer, OneSignal, SMTP | Gửi mail/thông báo | api-develop | api-develop/package.json, api-develop/config/app.js | Đã xác minh | SMTP cấu hình bằng biến/placeholder |
-| Authentication | JWT/token + Google OAuth | Xác thực | api-develop, web-admin, web-ssstudy | api-develop/config/app.js, web-admin/.env, web-ssstudy/src/services/authService.ts | Đã xác minh | Frontend gửi Authorization header |
-| Scheduler/job | node-schedule | Job định kỳ | api-develop | api-develop/package.json, api-develop/app.js | Đã xác minh | ScheduleService và suspension worker |
-| Logging | log4js + logstashudp | Log ứng dụng | api-develop | api-develop/package.json | Đã xác minh | Chưa thấy cấu hình log aggregation production |
-| Build/deploy | Docker, PM2, Jenkins, GitLab CI | Build/deploy | api-develop, web-admin, web-ssstudy | Dockerfile/Jenkinsfile/.gitlab-ci.yml | Đã xác minh | Có cả container và EC2/S3 deployment |
-| Reverse proxy | Nginx/HTTP server không thấy trong source | [CẦN XÁC NHẬN] | - | - | Cần xác nhận | Có Jenkins deploy trực tiếp container/PM2/S3, chưa thấy nginx manifest |
-| Cloud/AWS | AWS S3, AWS CLI, AWS SDK | Deploy frontend và SDK backend | web-admin/.gitlab-ci.yml, api-develop/package.json | web-admin/.gitlab-ci.yml, api-develop/package.json | Đã xác minh | Chỉ thấy evidence cho S3 + AWS CLI; không thấy toàn bộ AWS account/region/service |
+| Component | Recommendation | Rationale |
+|---|---|---|
+| Document DB | Managed document DB (MongoDB Atlas or compatible) with TLS, backups, point-in-time restore | Simplicity for document models while supporting ACID-ish transactions for critical flows via two-phase operations or multi-document transactions where supported |
+| Cache | Managed Redis (clustered) with auth and TLS | Low-latency cache and transient state, use for session and rate-limiting only |
+| Object storage | S3-compatible with lifecycle rules and CDN | Store media and large assets; use signed URLs for protected content |
+| API layer | Containerized microservices behind API Gateway / ALB | Scalability, centralized auth and routing |
+| Auth provider | JWT short-lived access + refresh tokens; optional OAuth2 for social login | Stateless access tokens reduce server load; implement refresh and revocation policy |
+| Scheduler | Dedicated worker pool (serverless or container) with job queue (e.g., managed SQS) | Ensure idempotency and retries; separate from request-serving fleet |
+| CI/CD | Pipeline with staging/promote workflow and canary/rolling deploys, automated infra-as-code | Reduce risky large rollouts and enable rollback |
+| Secrets management | Managed secrets store (AWS Secrets Manager / HashiCorp Vault) | No secrets in repo or config files |
+| Observability | Centralized logs, metrics, tracing (OpenTelemetry) and alerting | Support SLOs and incident response |
 
-## 4. Dependency và thư viện quan trọng
+## 4. Database guidance
 
-### 4.1 Backend
+- Model design: document model for content and learning artifacts, relational design for transactional flows (orders/payments) if needed.
+- Backups: daily snapshots, and verify periodic restore drills.
+- Indexing: design indexes for frequent queries (user lookups, course listing, book lookup).
+- Transactions: define transactional boundaries for payment/order flows; use DB transactions where supported or implement compensating operations.
 
-| Library | Version | Dự án sử dụng | Mục đích | Rủi ro/ghi chú | Bằng chứng |
-|---|---:|---|---|---|---|
-| express | ^4.21.2 | api-develop | HTTP server | Cần kiểm soát CORS và payload size | api-develop/package.json |
-| mongoose | ^5.4.14 | api-develop | MongoDB ODM | Version cũ, cần review breaking changes | api-develop/package.json |
-| redis | ^2.8.0 | api-develop | Cache/queue/light storage | Cần cấu hình kết nối an toàn | api-develop/package.json |
-| @payos/node | ^1.0.10 | api-develop | Payment integration | Webhook/security cần review | api-develop/package.json |
-| aws-sdk | ^2.478.0 | api-develop | AWS SDK | Cần secret management | api-develop/package.json |
-| multer | ^1.4.4 | api-develop | File upload | Cần giới hạn loại file, dung lượng | api-develop/package.json |
-| nodemailer | ^5.1.1 | api-develop | SMTP | Cần config bảo mật và retry | api-develop/package.json |
-| helmet | ^3.15.1 | api-develop | Security headers | Cần kiểm tra CORS và trust proxy | api-develop/package.json, api-develop/app.js |
-| log4js | ^4.5.1 | api-develop | Logging | Cần central logging | api-develop/package.json |
-| node-schedule | ^1.3.1 | api-develop | Scheduled jobs | Cần idempotency và alert | api-develop/package.json |
+## 5. Security and operations
 
-### 4.2 Web admin
+- Use HTTPS everywhere and enforce HSTS.
+- Validate and verify external webhooks (signature verification, timestamp + nonce, idempotency keys).
+- Implement rate-limiting, request validation, and input sanitization.
+- Audit critical actions (payments, refunds, permission changes) with structured logs.
+
+## 6. Deployment patterns
+
+- Environment separation: dev, staging, production with config per environment and secrets injected at deploy time.
+- Use IaC (Terraform/CloudFormation) for infra reproducibility.
+- Adopt CI pipeline that runs unit/integration tests and infra checks before promotion.
+
+## 7. Legacy note
+
+- This document is target-first. Any legacy evidence from prior codebases is intentionally not used as the primary design input. If a small set of legacy details is required for migration, collect them in `docs/legacy-notes.md` and treat them as optional migration references only.
+
+## 8. Next steps
+
+- Align `docs/business-rules.md` with critical domain invariants that affect infra decisions (e.g., payment idempotency, data retention).
+- Create a deployment runbook and disaster recovery plan tied to the recommended managed services.
 
 | Library | Version | Dự án sử dụng | Mục đích | Rủi ro/ghi chú | Bằng chứng |
 |---|---:|---|---|---|---|

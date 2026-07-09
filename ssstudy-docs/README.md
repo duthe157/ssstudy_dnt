@@ -1,33 +1,29 @@
 # SSStudy Documentation Set
 
-## Giới thiệu
-Tài liệu này được tạo dựa trên việc reverse-engineer các source hiện có của hệ thống SSStudy trong workspace: backend API, frontend quản trị và frontend người dùng/học viên. Mục tiêu là xây dựng bộ tài liệu AS-IS phục vụ bảo trì, onboarding, QA, phân tích tác động và chuẩn bị refactor sau này.
+Giới thiệu
+-----------
+Bộ tài liệu này là phiên bản SRS mục tiêu để xây dựng lại hệ thống SSStudy từ đầu. `docs/01-srs/modules/` chứa các module SRS chi tiết và là source-of-truth cho việc phát triển mới. Các tài liệu khác hỗ trợ kiến trúc, quy tắc nghiệp vụ và hạ tầng.
 
-## Phạm vi tài liệu
-- Phân tích source hiện có trong các thư mục:
-  - api-develop
-  - web-admin
-  - web-ssstudy
-- Chỉ ghi nhận những gì có bằng chứng từ source hiện tại.
-- Những nội dung chưa đủ bằng chứng sẽ được đánh dấu bằng nhãn [CẦN XÁC NHẬN].
-- Những phần có dấu hiệu không nhất quán, thiếu xử lý hoặc tiềm ẩn lỗi sẽ được đánh dấu bằng nhãn [RỦI RO / TECHNICAL DEBT].
+Source of truth
+---------------
+- `AGENTS.md`
+- `CLAUDE.md`
+- `docs/business-rules.md`
+- `docs/architecture.md`
+- `docs/01-srs/modules/`
+- `docs/03-infrastructure/`
 
-## Danh sách source được phân tích
-- Backend/API: api-develop
-- Frontend quản trị: web-admin
-- Frontend người dùng/học viên: web-ssstudy
-- Tài liệu dùng chung: ssstudy-docs
+Cấu trúc tài liệu
+-----------------
+- `AGENTS.md`: quy tắc AI Agent và luồng đọc tài liệu.
+- `CLAUDE.md`: chuẩn kỹ thuật, error/response contract, validation and security rules.
+- `docs/business-rules.md`: business rule IDs và invariants.
+- `docs/architecture.md`: module boundaries, dependency rules and layer constraints.
+- `docs/01-srs/modules/`: SRS modules (00–08) with use cases, user stories, API proposals and domain models.
+- `docs/03-infrastructure/`: infra recommendations and deployment guidance.
 
-## Tài liệu hạ tầng và vận hành
-- [SSStudy Infrastructure AS-IS and Target Recommendation](docs/03-infrastructure/SSSTUDY-INFRASTRUCTURE-AS-IS-AND-TARGET.md)
- - [SSStudy Database Architecture Assessment (AS-IS & Recommendation)](docs/03-infrastructure/SSSTUDY-DATABASE-ARCHITECTURE-ASSESSMENT.md)
-
-## Quy ước nhãn
-- [CẦN XÁC NHẬN]: nội dung chưa đủ bằng chứng từ source hoặc cần xác nhận với người dùng/nghiệp vụ.
-- [RỦI RO / TECHNICAL DEBT]: phần code có dấu hiệu trùng lặp, thiếu kiểm tra, không đồng nhất hoặc có khả năng gây lỗi.
-
-## Hướng dẫn cập nhật
-- Cập nhật tài liệu sau mỗi lần thay đổi source chính hoặc khi phát hiện module mới.
-- Khi bổ sung thông tin, ghi rõ đường dẫn file và thành phần liên quan.
-- Nếu có thay đổi endpoint, route, role hoặc workflow, cập nhật cả inventory và SRS liên quan.
-- Bộ SRS AS-IS hiện có 7 module đã được đặc tả: auth, classroom, document, exam, order/cart/payment, content/blog/configuration và book/book-id/course bundle.
+Lưu ý
+------
+- Không dùng code cũ làm nguồn tạo đặc tả — tài liệu hiện tại là để xây dựng từ đầu.
+- Legacy discovery files remain for migration reference only and must not be used as the primary design input.
+- Khi thay đổi nghiệp vụ, cập nhật `docs/business-rules.md`, `docs/architecture.md` và module tương ứng.

@@ -11,7 +11,7 @@
 | 5 | Order / cart / payment | Quản lý giỏ hàng, đơn hàng, thanh toán và lịch sử giao dịch | [api-develop/app/controllers/OrderController.js](../../../../api-develop/app/controllers/OrderController.js), [api-develop/app/controllers/CartController.js](../../../../api-develop/app/controllers/CartController.js), [web-ssstudy/src/app/gio-hang/page.tsx](../../../../web-ssstudy/src/app/gio-hang/page.tsx), [web-ssstudy/src/app/account/order-history/page.tsx](../../../../web-ssstudy/src/app/account/order-history/page.tsx) | /order, /credit, /coupon | /gio-hang, /thanh-toan/[id], /account/order-history | /cart/*, /order/*, /credit/* | Order, Cart, CreditLog | Phụ thuộc vào Authentication và Classroom | Cao | Trung bình |
 | 6 | Content pages / blog / configuration | Quản lý blog, trang nội dung, giới thiệu, giáo viên và cấu hình website | [api-develop/app/controllers/BlogController.js](../../../../api-develop/app/controllers/BlogController.js), [api-develop/app/controllers/AboutController.js](../../../../api-develop/app/controllers/AboutController.js), [api-develop/app/controllers/PageController.js](../../../../api-develop/app/controllers/PageController.js), [api-develop/app/controllers/CeoPageController.js](../../../../api-develop/app/controllers/CeoPageController.js), [api-develop/app/controllers/TeachersTeamController.js](../../../../api-develop/app/controllers/TeachersTeamController.js), [web-ssstudy/src/app/tin-tuc/[alias]/[slug]/page.tsx](../../../../web-ssstudy/src/app/tin-tuc/[alias]/[slug]/page.tsx), [web-ssstudy/src/app/(gioi-thieu)/ve-chung-toi/_components/MySelfIntroPageClient.tsx](../../../../web-ssstudy/src/app/(gioi-thieu)/ve-chung-toi/_components/MySelfIntroPageClient.tsx), [web-ssstudy/src/app/giao-vien/TeacherIntro.tsx](../../../../web-ssstudy/src/app/giao-vien/TeacherIntro.tsx) | /blog, /blog-category, /settings, /teachers-team, /admin-ceo | /ban-tin, /tin-tuc/[alias]/[slug], /gioi-thieu, /giao-vien | /blog/*, /blog-category/*, /about/*, /page/*, /ceo-page/*, /teachers-team/* | BlogPost, BlogCategory, Page, CeoPage, TeachersTeam | Phụ thuộc vào Authentication | Trung bình | Cao |
 | 7 | Book / book-id / course bundle | Quản lý sách và mã sách liên quan tới khóa học | [api-develop/app/controllers/BookController.js](../../../../api-develop/app/controllers/BookController.js), [api-develop/app/controllers/BookIdController.js](../../../../api-develop/app/controllers/BookIdController.js), [api-develop/app/controllers/BookIdCourseController.js](../../../../api-develop/app/controllers/BookIdCourseController.js), [web-ssstudy/src/app/sach/page.tsx](../../../../web-ssstudy/src/app/sach/page.tsx), [web-ssstudy/src/app/sach-id/page.tsx](../../../../web-ssstudy/src/app/sach-id/page.tsx), [web-ssstudy/src/app/account/my-course/MyCourseForm.tsx](../../../../web-ssstudy/src/app/account/my-course/MyCourseForm.tsx) | /book, /book-id, /book-id-course | /sach, /sach-id, /account/my-course | /book/*, /book-id/*, /book-id-course/* | Book, BookId, BookIdCourse, StudentBookId | Phụ thuộc vào Authentication, Classroom | Trung bình | Cao |
-| 8 | Import/export / báo cáo / tích hợp / scheduler | Các endpoint phụ trợ về report, link payment, bill, iframe, message, action log và label | [api-develop/app/routes/routes.js](../../../../api-develop/app/routes/routes.js), [api-develop/app/controllers/ReportBugController.js](../../../../api-develop/app/controllers/ReportBugController.js), [api-develop/app/controllers/LinkPaymentsController.js](../../../../api-develop/app/controllers/LinkPaymentsController.js), [api-develop/app/controllers/BillController.js](../../../../api-develop/app/controllers/BillController.js), [api-develop/app/controllers/MessageController.js](../../../../api-develop/app/controllers/MessageController.js), [api-develop/app/controllers/IframeController.js](../../../../api-develop/app/controllers/IframeController.js), [api-develop/app/controllers/ActionLogController.js](../../../../api-develop/app/controllers/ActionLogController.js), [api-develop/app/controllers/LabelController.js](../../../../api-develop/app/controllers/LabelController.js) | /report-bug, /bill, /quick-payments, /iframe, /message | [CẦN XÁC NHẬN] | /report-bug/*, /link-payment/*, /bill/*, /message/*, /iframe/*, /action-log/*, /label/* | ReportBug, LinkPayments, Billing, Message, Iframe, ActionLog, Label | Phụ thuộc vào nhiều module nghiệp vụ và chưa có đủ bằng chứng để tạo module độc lập | Thấp | Thấp |
+| 8 | Import/export / báo cáo / tích hợp / scheduler | Báo cáo vận hành, import/export dữ liệu, job/scheduler và cấu hình tích hợp ngoài | `docs/01-srs/modules/08-reporting-import-export-integration-scheduler.md` | /reports, /exports, /imports, /jobs, /integrations | /reports/*, /exports/*, /imports/*, /jobs/*, /integrations/* | Report, ImportBatch, ExportRequest, JobExecutionLog, IntegrationConfig | Phụ thuộc vào Authentication, Classroom, Exam, Order, Document | Cao | Cao |
 
 ## 2. Thứ tự đặc tả đề xuất
 
@@ -28,73 +28,7 @@
 4. Exam / testing
    - Lý do ưu tiên: có luồng riêng, liên quan tới dữ liệu câu hỏi và kết quả bài làm, có nhiều API rõ ràng.
 
-5. Order / cart / payment
-   - Lý do ưu tiên: có flow nghiệp vụ có tính chất giao dịch và tích hợp ngoài như PayOS.
-
-6. Blog / content pages / configuration
-   - Lý do ưu tiên: có cấu hình website và nội dung tĩnh, nhưng mức độ phụ thuộc và độ phức tạp nghiệp vụ lower hơn các module giao dịch và học tập.
-
-7. Book / book-id / course bundle
-   - Lý do ưu tiên: có nhiều route nhưng phụ thuộc nhiều vào classroom và content.
-
-8. Import/export / báo cáo / tích hợp / scheduler
-   - Lý do ưu tiên: là module phụ trợ và có phần chưa được ánh xạ đầy đủ qua UI trong phạm vi hiện tại.
-
-## 3. Trạng thái thực hiện module
-
-- Authentication / tài khoản / phân quyền — Hoàn thành
-- Classroom / khóa học — Hoàn thành
-- Document / tài liệu — Hoàn thành
-- Exam / testing — Hoàn thành
-- Order / cart / payment — Hoàn thành
-- Content pages / blog / configuration — Hoàn thành
-- Book / book-id / course bundle — Hoàn thành
-- Import/export / báo cáo / tích hợp / scheduler — Cần xác nhận thêm vì chỉ có bằng chứng một phần và chưa đủ để lập module độc lập đầy đủ
-
-### Chi tiết cho Document / tài liệu
-- File đã tạo: [docs/01-srs/modules/03-document-tai-lieu.md](../modules/03-document-tai-lieu.md)
-- Các source đã đối chiếu: [api-develop/app/controllers/DocumentController.js](../../../../api-develop/app/controllers/DocumentController.js), [api-develop/app/controllers/DocumentCategoryController.js](../../../../api-develop/app/controllers/DocumentCategoryController.js), [api-develop/app/services/UploadService.js](../../../../api-develop/app/services/UploadService.js), [web-admin/src/components/document/Document.js](../../../../web-admin/src/components/document/Document.js), [web-admin/src/components/document/DocumentCreate.js](../../../../web-admin/src/components/document/DocumentCreate.js), [web-admin/src/components/document/DocumentEdit.js](../../../../web-admin/src/components/document/DocumentEdit.js), [web-admin/src/components/document/DocumentCategory.js](../../../../web-admin/src/components/document/DocumentCategory.js), [web-ssstudy/src/app/tai-lieu/page.tsx](../../../../web-ssstudy/src/app/tai-lieu/page.tsx), [web-ssstudy/src/app/tai-lieu/[id]/_components/DocumentDetailClient.tsx](../../../../web-ssstudy/src/app/tai-lieu/[id]/_components/DocumentDetailClient.tsx)
-- Các phần đã bổ sung sau kiểm tra thực chất: phân quyền public/PRO, kiểm soát classroom membership, kịch bản kiểm thử, rủi ro và câu hỏi cần xác nhận.
-
-## 4. Module tiếp theo
-- Tên module: Exam / testing
-- Lý do chọn:
-  - Có bằng chứng rõ ràng từ backend, admin frontend và public frontend.
-  - Có luồng riêng về câu hỏi, bài thi và kết quả làm bài.
-  - Có thể đặc tả bằng các file hiện có mà không cần suy đoán nhiều.
-- Source sẽ đối chiếu tiếp:
-  - [api-develop/app/controllers/ExamWordController.js](../../../../api-develop/app/controllers/ExamWordController.js)
-  - [api-develop/app/controllers/TestingController.js](../../../../api-develop/app/controllers/TestingController.js)
-  - [web-ssstudy/src/app/thi-thu](../../../../web-ssstudy/src/app/thi-thu)
-- Lý do chọn:
-  - Có bằng chứng rõ ràng từ backend, admin frontend và user frontend.
-  - Là module nền tảng cho nhiều route và nhiều permission guard.
-  - Có thể đặc tả bằng chính các file hiện có mà không cần suy đoán nghiệp vụ bên ngoài.
-- Các source sẽ đọc sâu:
-  - [api-develop/app/controllers/AuthController.js](../../../../api-develop/app/controllers/AuthController.js)
-  - [api-develop/app/controllers/UserController.js](../../../../api-develop/app/controllers/UserController.js)
-  - [api-develop/app/routes/routes.js](../../../../api-develop/app/routes/routes.js)
-  - [api-develop/app/routes/CheckToken.js](../../../../api-develop/app/routes/CheckToken.js)
-  - [api-develop/app/routes/CheckScope.js](../../../../api-develop/app/routes/CheckScope.js)
-  - [api-develop/config/app.js](../../../../api-develop/config/app.js)
-  - [api-develop/config/user_scopes.json](../../../../api-develop/config/user_scopes.json)
-  - [api-develop/app/models/User.js](../../../../api-develop/app/models/User.js)
-  - [web-admin/src/redux/auth/action.js](../../../../web-admin/src/redux/auth/action.js)
-  - [web-admin/src/routing/PrivateRoute.js](../../../../web-admin/src/routing/PrivateRoute.js)
-  - [web-admin/src/components/Master.js](../../../../web-admin/src/components/Master.js)
-  - [web-ssstudy/src/services/authService.ts](../../../../web-ssstudy/src/services/authService.ts)
-  - [web-ssstudy/src/app/auth/signin/page.tsx](../../../../web-ssstudy/src/app/auth/signin/page.tsx)
-- Các màn hình, API và entity dự kiến được đối chiếu:
-  - Màn hình: /login, /auth/signin, /auth/signup, /auth/forgot-password, /account/change-password, /profile
-  - API: /auth/signin, /auth/signup, /auth/google-auth, /forgot-password, /user/profile, /user/update-profile, /user/change-password
-  - Entity: User
-- Các phần có nguy cơ cần xác nhận:
-  - Chi tiết scope cho role STUDENT và các role phụ trợ chưa được nêu đầy đủ.
-  - Luồng logout và session invalidation chưa được thấy đầy đủ ở backend.
-  - Việc lưu token ở cookie/localStorage ở frontend có thể tạo rủi ro bảo mật và cần kiểm tra lại trong môi trường vận hành.
-
-## 4. Module sẽ đặc tả tiếp theo
-- Tên module: Classroom / khóa học
+*** End Patch
 - Lý do chọn:
   - Có đầy đủ bằng chứng từ backend, admin frontend và user frontend.
   - Là module trung tâm trong hệ thống học tập và có nhiều API và màn hình liên quan.

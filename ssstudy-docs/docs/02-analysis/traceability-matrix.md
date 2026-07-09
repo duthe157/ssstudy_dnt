@@ -1,38 +1,14 @@
-# Traceability matrix – Modules hiện có
+# Feature matrix — mapping to SRS proposals
 
-## 1. Mục đích
-Ma trận này nối các chức năng nghiệp vụ chính của các module đã đặc tả với màn hình, API, controller/service và entity dữ liệu liên quan.
+Purpose: map proposed SRS features to recommended UI routes, API proposals, required business services and domain models. This matrix is target-first and does not reference legacy controllers.
 
-## 2. Ma trận truy vết
+| Mã chức năng | Tên chức năng | Actor | Màn hình đề xuất | API đề xuất | Dịch vụ nghiệp vụ cần có | Dữ liệu/model liên quan | Quy tắc áp dụng | Priority |
+|---|---|---|---|---|---|---|---|---|
+| ORD-01 | Quản lý giỏ hàng | STUDENT | `/cart` | `GET /api/cart`, `POST /api/cart/items`, `PUT /api/cart/items/:id`, `DELETE /api/cart/items/:id` | CartService: session/cart merge, price calculation, coupon application | Cart, CartItem, Coupon | BR-ORDER-001, BR-ORDER-002 | Must |
+| ORD-02 | Áp dụng mã khuyến mại | STUDENT | `/cart` | `POST /api/cart/apply-coupon` | PromotionService: validate coupon, stacking rules, expiry | Coupon, Cart | BR-PROMO-001 | Must |
+| ORD-03 | Tạo đơn hàng và thanh toán | STUDENT | `/checkout` | `POST /api/orders` | OrderService: create order, reserve inventory, initiate payment | Order, OrderItem, PaymentTransaction | BR-PAY-001, BR-PAY-002 | Must |
+| ORD-04 | Xem lịch sử đơn hàng | STUDENT | `/account/orders` | `GET /api/orders` | OrderQueryService: pagination, filtering by status | Order, OrderItem | BR-PRIV-001 | Should |
 
-| Chức năng nghiệp vụ | Màn hình / Route | API | Backend/controller | Entity dữ liệu | Trạng thái bằng chứng |
-|---|---|---|---|---|---|
-| Xem giỏ hàng | /gio-hang | /cart/detail | CartController.detail | Cart, CartItem | Đã xác nhận |
-| Thêm sản phẩm vào giỏ | /gio-hang | /cart/add | CartController.add | Cart, CartItem | Đã xác nhận |
-| Chọn / bỏ chọn / xóa item | /gio-hang | /cart/update, /cart/delete | CartController.update, CartController.delete | CartItem | Đã xác nhận |
-| Áp dụng / xóa coupon | /gio-hang | /cart/apply-coupon, /cart/remove-coupon, /coupon-list | CartController.applyCoupon, CartController.removeCoupon, CouponController.listPublic | Coupon, Cart | Có bằng chứng, rule chi tiết cần xác nhận |
-| Tạo đơn hàng | /gio-hang/thanh-toan | /order/create | OrderController.create | Order, OrderItem | Đã xác nhận |
-| Xem thông tin thanh toán | /gio-hang/thanh-toan | /order/payment-info, /order/payment_payos | OrderController.paymentInfo, OrderController.paymentPayOs | Order, OrderPaymentCode | Đã xác nhận |
-| Cập nhật trạng thái thanh toán từ PayOS | webhook / callback | /order/payos_update_order | OrderController.payOSUpdateOrder | Order, OrderItem | Có bằng chứng, workflow thực tế cần xác nhận |
-| Xem lịch sử đơn hàng | /account/order-history | /order/list, /order/detail | OrderController.list, OrderController.detail | Order, OrderItem | Đã xác nhận |
-| Xem lịch sử credit | /account/credit-history | /credit/list, /credit/detail | CreditController.list, CreditController.detail | CreditLog | Đã xác nhận |
-| Nạp tiền / top-up | /account/credit-history | /credit/payment, /credit/payment_payos | CreditController.payment, CreditController.paymentPayOS | CreditLog, OrderPaymentCode | Đã xác nhận |
-| Xử lý callback nạp tiền | webhook / callback | /credit/payos_hook | CreditController.payOSHook | CreditLog, User | Có bằng chứng, cần xác nhận security và idempotency |
-| Quản trị order ở admin | /order | /order/list, /order/update-status | OrderController.list, OrderController.updateStatus | Order | Đã xác nhận |
-| Quản trị credit ở admin | /credit | /credit/list, /credit/create | CreditController.list, CreditController.create | CreditLog | Đã xác nhận |
-| Quản trị coupon ở admin | /coupon | /coupon/list, /coupon/create, /coupon/update | CouponController | Coupon | Đã xác nhận |
-
-## 3. Bổ sung ma trận cho module 06 và 07
-
-| Chức năng nghiệp vụ | Màn hình / Route | API | Backend/controller | Entity dữ liệu | Trạng thái bằng chứng |
-|---|---|---|---|---|---|
-| Xem blog và danh mục | /ban-tin, /tin-tuc/[alias]/[slug] | /blog/list-public, /blog-category/list-public | BlogController, BlogCategoryController | BlogPost, BlogCategory | Đã xác nhận |
-| Xem trang giới thiệu / giáo viên / CEO | /gioi-thieu, /giao-vien | /about/detail, /teachers-team/detail, /ceo-page/detail | AboutController, TeachersTeamController, CeoPageController | Page, TeachersTeam, CeoPage | Đã xác nhận |
-| Xem sách và chi tiết sách | /sach, /sach/[alias] | /book/list, /book/detail | BookController | Book, UserBuyData | Đã xác nhận |
-| Tìm kiếm book-id và kiểm tra ownership | /sach-id | /book-id/list-public, /book-id/detail | BookIdController | BookId, StudentBookId, StudentClassroom | Đã xác nhận |
-| Xem course bundle đã sở hữu | /account/my-course | /book-id-course/list-owned, /book-id-course/detail | BookIdCourseController | BookIdCourse, StudentBookId | Có bằng chứng, ownership flow cần xác nhận thêm |
-
-## 4. Ghi chú
-- Mức độ xác minh cao cho luồng checkout và lịch sử giao dịch.
-- Mức độ xác minh trung bình cho rule coupon, lifecycle trạng thái thanh toán và handling callback.
-- Mức độ xác minh trung bình cho module 06/07 ở phần scope admin và ownership/book-id lifecycle.
+Notes:
+- Use BR-* rule IDs from `docs/business-rules.md` to document business invariants referenced in the matrix.
+- Priority values guide implementation order; modules with many Must items should be prioritized in the first sprint.
